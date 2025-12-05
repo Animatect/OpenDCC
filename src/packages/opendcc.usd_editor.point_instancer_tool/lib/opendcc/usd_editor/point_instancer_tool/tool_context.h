@@ -10,7 +10,10 @@
 
 #include "opendcc/app/core/application.h"
 #include "opendcc/app/viewport/iviewport_tool_context.h"
-#include <ImathVec.h>
+
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/quatf.h>
+
 #include "pxr/usd/usdGeom/pointInstancer.h"
 #include "opendcc/app/core/mesh_bvh.h"
 #include <random>
@@ -29,8 +32,8 @@ public:
     struct Properties
     {
         int32_t current_proto_idx = 0;
-        Imath::V3f scale = { 1, 1, 1 };
-        Imath::V3f scale_randomness = { 0, 0, 0 };
+        PXR_NS::GfVec3f scale = { 1, 1, 1 };
+        PXR_NS::GfVec3f scale_randomness = { 0, 0, 0 };
         float vertical_offset = 0;
         float bend_randomness = 0;
         float rotation_min = 0;
@@ -71,12 +74,12 @@ public:
 
 private:
     Properties m_properties;
-    std::vector<Imath::V2f> generate_uv();
+    std::vector<PXR_NS::GfVec2f> generate_uv();
     void update_context();
-    Imath::V3f main_direction() const;
-    Imath::V3f compute_scale();
-    Imath::V3f compute_point(const Imath::V3f& direction);
-    PXR_NS::GfQuath compute_quat(const Imath::V3f& direction);
+    PXR_NS::GfVec3f main_direction() const;
+    PXR_NS::GfVec3f compute_scale();
+    PXR_NS::GfVec3f compute_point(const PXR_NS::GfVec3f& direction);
+    PXR_NS::GfQuath compute_quat(const PXR_NS::GfVec3f& direction);
 
     void generate(PXR_NS::VtVec3fArray& new_points, PXR_NS::VtQuathArray& new_orientations, PXR_NS::VtVec3fArray& new_scales);
 
@@ -84,8 +87,8 @@ private:
     Application::CallbackHandle m_selection_event_hndl;
     PXR_NS::UsdGeomPointInstancer m_instancer;
     bool m_is_intersect = false;
-    Imath::V3f m_p;
-    Imath::V3f m_n;
+    PXR_NS::GfVec3f m_p;
+    PXR_NS::GfVec3f m_n;
     std::mt19937 m_rand_engine;
     std::unique_ptr<MeshBvh> m_bvh;
     PXR_NS::SdfPath m_geom_id;
@@ -95,7 +98,7 @@ private:
     bool is_adjust_radius = false;
     float m_start_radius = 1;
     int m_start_x = 0;
-    std::vector<Imath::V2f> m_generated_uv;
+    std::vector<PXR_NS::GfVec2f> m_generated_uv;
     static const uint32_t points_in_unit_radius = 50;
 
     QCursor* m_cursor = nullptr;

@@ -20,13 +20,11 @@
 #include "opendcc/app/viewport/viewport_gl_widget.h"
 #include "opendcc/app/viewport/viewport_widget.h"
 #include "opendcc/app/viewport/viewport_camera_controller.h"
-#include "opendcc/app/core/application.h"
 #include "opendcc/app/core/session.h"
 #include "opendcc/app/viewport/viewport_view.h"
 #include "paint_primvar_tool_context.h"
 #include "mesh_manipulation_data.h"
-#include <ImathMatrix.h>
-#include <ImathQuat.h>
+
 #include "opendcc/app/viewport/prim_material_override.h"
 #if PXR_VERSION >= 2002
 #include <pxr/usd/sdr/registry.h>
@@ -292,7 +290,7 @@ void PaintPrimvarToolContext::update_context()
     m_on_mesh_changed();
 }
 
-Imath::M44f get_vp_matrix(ViewportGLWidget* viewport)
+GfMatrix4f get_vp_matrix(ViewportGLWidget* viewport)
 {
     GfCamera camera = viewport->get_camera();
     GfFrustum frustum = camera.GetFrustum();
@@ -302,9 +300,7 @@ Imath::M44f get_vp_matrix(ViewportGLWidget* viewport)
 
     GfMatrix4d m = frustum.ComputeViewMatrix() * frustum.ComputeProjectionMatrix();
 
-    return Imath::M44f((float)m[0][0], (float)m[0][1], (float)m[0][2], (float)m[0][3], (float)m[1][0], (float)m[1][1], (float)m[1][2], (float)m[1][3],
-                       (float)m[2][0], (float)m[2][1], (float)m[2][2], (float)m[2][3], (float)m[3][0], (float)m[3][1], (float)m[3][2],
-                       (float)m[3][3]);
+    return GfMatrix4f(m);
 }
 
 PaintPrimvarToolContext::PaintPrimvarToolContext()
@@ -353,22 +349,21 @@ void PaintPrimvarToolContext::draw(const ViewportViewPtr& viewport_view, Viewpor
     float R = m_properties.radius;
     int N = points_in_unit_radius * std::ceil(R);
 
-    Imath::V3f p(m_p[0], m_p[1], m_p[2]);
-    Imath::V3f n(m_n[0], m_n[1], m_n[2]);
+    GfVec3f p(m_p);
+    GfVec3f n(m_n);
 
-    Imath::V3f e = Imath::V3f(1, 0, 0);
+    GfVec3f e = GfVec3f(1, 0, 0);
 
-    if (std::abs(e ^ n) > 0.8f)
-        e = Imath::V3f(0, 1, 0);
+    if (std::abs(GfDot(e, n)) > 0.8f)
+        e = GfVec3f(0, 1, 0);
 
-    const Imath::V3f x_axis = e.cross(n).normalized();
-    const Imath::V3f y_axis = n.cross(x_axis).normalized();
+    const GfVec3f x_axis = GfCross(e, n).GetNormalized();
+    const GfVec3f y_axis = GfCross(n, x_axis).GetNormalized();
 
     std::vector<GfVec3f> points(N + 1);
     for (int i = 0; i <= N; ++i)
     {
-        Imath::V3f pp = p + R * x_axis * cos((2 * M_PI * i) / N) + R * y_axis * sin((2 * M_PI * i) / N) + up_shift * n;
-        points[i] = GfVec3f(pp.x, pp.y, pp.z);
+        points[i] = p + R * x_axis * cos((2 * M_PI * i) / N) + R * y_axis * sin((2 * M_PI * i) / N) + up_shift * n;
     }
 
     auto active_view = ApplicationUI::instance().get_active_view();
@@ -376,9 +371,7 @@ void PaintPrimvarToolContext::draw(const ViewportViewPtr& viewport_view, Viewpor
         return;
 
     auto viewport = active_view->get_gl_widget();
-    Imath::M44f m = get_vp_matrix(viewport);
-    GfMatrix4f mf = { m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3],
-                      m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3] };
+    GfMatrix4f mf = get_vp_matrix(viewport);
 
     draw_manager->begin_drawable();
     draw_manager->set_mvp_matrix(mf);
@@ -389,7 +382,7 @@ void PaintPrimvarToolContext::draw(const ViewportViewPtr& viewport_view, Viewpor
     draw_manager->set_mvp_matrix(mf);
     draw_manager->set_prim_type(ViewportUiDrawManager::PrimitiveTypeLines);
     float half_R = R / 2;
-    draw_manager->line(GfVec3f(p.x, p.y, p.z), GfVec3f(p.x + n.x * half_R, p.y + n.y * half_R, p.z + n.z * half_R));
+    draw_manager->line(p, p + n * half_R);
     draw_manager->end_drawable();
 }
 

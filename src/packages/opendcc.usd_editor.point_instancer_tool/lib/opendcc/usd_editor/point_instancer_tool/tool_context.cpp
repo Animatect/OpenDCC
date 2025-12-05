@@ -22,14 +22,11 @@
 #include "opendcc/app/viewport/viewport_gl_widget.h"
 #include "opendcc/app/viewport/viewport_widget.h"
 #include "opendcc/app/viewport/viewport_camera_controller.h"
-#include "opendcc/app/core/application.h"
 #include "opendcc/app/core/session.h"
 #include "opendcc/app/core/undo/stack.h"
 
 #include "opendcc/app/viewport/viewport_view.h"
 #include "opendcc/usd_editor/point_instancer_tool/tool_context.h"
-#include <ImathMatrix.h>
-#include <ImathQuat.h>
 
 OPENDCC_NAMESPACE_OPEN
 
@@ -84,74 +81,74 @@ void PointInstancerToolContext::update_context()
     m_generated_uv = generate_uv();
 }
 
-Imath::V3f PointInstancerToolContext::main_direction() const
+GfVec3f PointInstancerToolContext::main_direction() const
 {
     return m_n;
 }
 
-Imath::V3f PointInstancerToolContext::compute_scale()
+GfVec3f PointInstancerToolContext::compute_scale()
 {
-    Imath::V3f result;
+    GfVec3f result;
     for (size_t i = 0; i < 3; ++i)
         result[i] = m_properties.scale[i] + m_properties.scale_randomness[i] * (float_distribution(m_rand_engine) - 0.5) * 0.01f;
-
     return result;
 }
 
-Imath::V3f PointInstancerToolContext::compute_point(const Imath::V3f& direction)
+GfVec3f PointInstancerToolContext::compute_point(const GfVec3f& direction)
 {
     return m_p + direction * m_properties.vertical_offset;
 }
 
-GfQuath PointInstancerToolContext::compute_quat(const Imath::V3f& direction)
+GfQuath PointInstancerToolContext::compute_quat(const GfVec3f& direction)
 {
     GfQuath bend_quat = GfQuath::GetIdentity();
     if (std::abs(m_properties.bend_randomness) > 1e-3)
     {
-        Imath::V3f e = Imath::V3f(1, 0, 0);
+        GfVec3f e = GfVec3f(1, 0, 0);
 
-        if (std::abs(e ^ direction) > 0.8f)
-            e = Imath::V3f(0, 1, 0);
+        if (std::abs(GfDot(e, direction) > 0.8f))
+            e = GfVec3f(0, 1, 0);
 
-        const Imath::V3f x_axis = e.cross(direction).normalized();
-        const Imath::V3f y_axis = direction.cross(x_axis).normalized();
+        const GfVec3f x_axis = GfCross(e, direction).GetNormalized();
+        const GfVec3f y_axis = GfCross(direction, x_axis).GetNormalized();
 
         float bend_angle_0 = 2 * m_properties.bend_randomness * (float_distribution(m_rand_engine) - 0.5f);
         float bend_angle_1 = 2 * m_properties.bend_randomness * (float_distribution(m_rand_engine) - 0.5f);
 
-        Imath::Quatf quat_bend_0;
-        quat_bend_0.setAxisAngle(x_axis, bend_angle_0 / 180 * M_PI);
-        Imath::Quatf quat_bend_1;
-        quat_bend_1.setAxisAngle(y_axis, bend_angle_1 / 180 * M_PI);
+        GfRotation bend_0;
+        bend_0.SetAxisAngle(x_axis, bend_angle_0);
+        GfQuatf quat_bend_0 = GfQuatf(bend_0.GetQuat());
 
-        Imath::Quatf q = quat_bend_0 * quat_bend_1;
-        bend_quat = GfQuath(q.r, q.v.x, q.v.y, q.v.z);
+        GfRotation bend_1;
+        bend_1.SetAxisAngle(y_axis, bend_angle_1);
+        GfQuatf quat_bend_1 = GfQuatf(bend_1.GetQuat());
+
+        bend_quat = GfQuath(quat_bend_0 * quat_bend_1);
     }
 
-    GfVec3f direction_gf(direction.x, direction.y, direction.z);
     double angle = m_properties.rotation_min + (m_properties.rotation_max - m_properties.rotation_min) * float_distribution(m_rand_engine);
-    GfRotation rotation(direction_gf, angle);
+    GfRotation rotation(direction, angle);
     auto quatd = rotation.GetQuat();
 
-    auto result_quat = GfQuath(quatd.GetReal(), quatd.GetImaginary()[0], quatd.GetImaginary()[1], quatd.GetImaginary()[2]) * bend_quat;
+    auto result_quat = GfQuath(quatd) * bend_quat;
 
     if (m_properties.rotate_to_normal)
     {
-        GfRotation rotation_to_normal(GfVec3f(0, 1, 0), direction_gf);
+        GfRotation rotation_to_normal(GfVec3f(0, 1, 0), direction);
         GfQuatd quat_d = rotation_to_normal.GetQuat();
-        GfQuath rotate_to_normal_quath = GfQuath(quat_d.GetReal(), quat_d.GetImaginary()[0], quat_d.GetImaginary()[1], quat_d.GetImaginary()[2]);
+        GfQuath rotate_to_normal_quath = GfQuath(quat_d);
         result_quat = rotate_to_normal_quath * result_quat;
     }
     return result_quat;
 }
 
-std::vector<Imath::V2f> PointInstancerToolContext::generate_uv()
+std::vector<GfVec2f> PointInstancerToolContext::generate_uv()
 {
-    std::vector<Imath::V2f> result;
+    std::vector<GfVec2f> result;
     size_t num_points = size_t(4.0f * m_properties.radius * m_properties.radius * m_properties.density) + 1;
     if (m_properties.mode == Mode::Single)
     {
-        return { Imath::V2f(0, 0) };
+        return { GfVec2f(0, 0) };
     }
     for (size_t i = 0; i < num_points; ++i)
     {
@@ -166,40 +163,40 @@ std::vector<Imath::V2f> PointInstancerToolContext::generate_uv()
             if (float_distribution(m_rand_engine) > falloff_value)
                 continue;
         }
-        result.push_back(Imath::V2f(u, v));
+        result.push_back(GfVec2f(u, v));
     }
     return result;
 }
 
-void PointInstancerToolContext::generate(PXR_NS::VtVec3fArray& new_points, PXR_NS::VtQuathArray& new_orientations, PXR_NS::VtVec3fArray& new_scales)
+void PointInstancerToolContext::generate(VtVec3fArray& new_points, VtQuathArray& new_orientations, VtVec3fArray& new_scales)
 {
     new_points.clear();
     new_orientations.clear();
     new_scales.clear();
-    std::vector<Imath::V3f> generated_points_normals;
+    std::vector<GfVec3f> generated_points_normals;
 
-    Imath::V3f direction = main_direction();
+    GfVec3f direction = main_direction();
 
     if (m_properties.mode == Mode::Single)
     {
         auto p = compute_point(direction);
-        new_points.push_back(GfVec3f(p.x, p.y, p.z));
+        new_points.push_back(p);
     }
     else
     {
         VtVec3fArray generated_points;
-        Imath::V3f e = Imath::V3f(1, 0, 0);
+        GfVec3f e = GfVec3f(1, 0, 0);
 
-        if (std::abs(e ^ direction) > 0.8f)
-            e = Imath::V3f(0, 1, 0);
+        if (std::abs(GfDot(e, direction)) > 0.8f)
+            e = GfVec3f(0, 1, 0);
 
-        const Imath::V3f x_axis = e.cross(direction).normalized();
-        const Imath::V3f y_axis = direction.cross(x_axis).normalized();
+        const GfVec3f x_axis = GfCross(e, direction).GetNormalized();
+        const GfVec3f y_axis = GfCross(direction, x_axis).GetNormalized();
 
         for (auto uv : m_generated_uv)
         {
-            auto p = uv.x * x_axis * m_properties.radius + uv.y * y_axis * m_properties.radius + m_p + direction * m_properties.vertical_offset;
-            generated_points.push_back(GfVec3f(p.x, p.y, p.z));
+            auto p = uv[0] * x_axis * m_properties.radius + uv[1] * y_axis * m_properties.radius + m_p + direction * m_properties.vertical_offset;
+            generated_points.push_back(p);
         }
 
         if (m_bvh)
@@ -207,16 +204,16 @@ void PointInstancerToolContext::generate(PXR_NS::VtVec3fArray& new_points, PXR_N
             float r2 = m_properties.radius * m_properties.radius;
             for (size_t i = 0; i < generated_points.size(); ++i)
             {
-                GfVec3f dir(-direction.x, -direction.y, -direction.z);
+                GfVec3f dir(-direction[0], -direction[1], -direction[2]);
                 GfVec3f origin(generated_points[i] - 10 * m_properties.radius * dir);
 
                 GfVec3f hit_point, hit_normal;
                 bool is_bvh_intersect = m_bvh->cast_ray(origin, dir, hit_point, hit_normal);
-                if (is_bvh_intersect && ((hit_point - GfVec3f(m_p.x, m_p.y, m_p.z)).GetLengthSq() < r2))
+                if (is_bvh_intersect && ((hit_point - m_p).GetLengthSq() < r2))
                 {
                     new_points.push_back(hit_point);
-                    auto n = Imath::V3f(hit_normal[0], hit_normal[1], hit_normal[2]);
-                    if (n.dot(m_n) < 0)
+                    auto n = GfVec3f(hit_normal[0], hit_normal[1], hit_normal[2]);
+                    if (GfDot(n, m_n) < 0)
                         n = -n;
                     generated_points_normals.push_back(n);
                 }
@@ -230,8 +227,8 @@ void PointInstancerToolContext::generate(PXR_NS::VtVec3fArray& new_points, PXR_N
 
     for (size_t i = 0; i < new_points.size(); ++i)
     {
-        Imath::V3f s = compute_scale();
-        new_scales.push_back(GfVec3f(s.x, s.y, s.z));
+        GfVec3f s = compute_scale();
+        new_scales.push_back(s);
         if (generated_points_normals.size() > 0)
             new_orientations.push_back(compute_quat(generated_points_normals[i]));
         else
@@ -239,7 +236,7 @@ void PointInstancerToolContext::generate(PXR_NS::VtVec3fArray& new_points, PXR_N
     }
 }
 
-Imath::M44f get_vp_matrix(ViewportGLWidget* viewport)
+GfMatrix4f get_vp_matrix(ViewportGLWidget* viewport)
 {
     GfCamera camera = viewport->get_camera();
     GfFrustum frustum = camera.GetFrustum();
@@ -249,9 +246,7 @@ Imath::M44f get_vp_matrix(ViewportGLWidget* viewport)
 
     GfMatrix4d m = frustum.ComputeViewMatrix() * frustum.ComputeProjectionMatrix();
 
-    return Imath::M44f((float)m[0][0], (float)m[0][1], (float)m[0][2], (float)m[0][3], (float)m[1][0], (float)m[1][1], (float)m[1][2], (float)m[1][3],
-                       (float)m[2][0], (float)m[2][1], (float)m[2][2], (float)m[2][3], (float)m[3][0], (float)m[3][1], (float)m[3][2],
-                       (float)m[3][3]);
+    return GfMatrix4f(m);
 }
 
 PointInstancerToolContext::PointInstancerToolContext()
@@ -291,22 +286,21 @@ void PointInstancerToolContext::draw(const ViewportViewPtr& viewport_view, Viewp
     float R = m_properties.radius;
     int N = points_in_unit_radius * std::ceil(R);
 
-    Imath::V3f p = m_p;
-    Imath::V3f n = m_n;
+    GfVec3f p(m_p);
+    GfVec3f n(m_n);
 
-    Imath::V3f e = Imath::V3f(1, 0, 0);
+    GfVec3f e = GfVec3f(1, 0, 0);
 
-    if (std::abs(e ^ n) > 0.8f)
-        e = Imath::V3f(0, 1, 0);
+    if (std::abs(GfDot(e, n)) > 0.8f)
+        e = GfVec3f(0, 1, 0);
 
-    const Imath::V3f x_axis = e.cross(n).normalized();
-    const Imath::V3f y_axis = n.cross(x_axis).normalized();
+    const GfVec3f x_axis = GfCross(e, n).GetNormalized();
+    const GfVec3f y_axis = GfCross(n, x_axis).GetNormalized();
 
     std::vector<GfVec3f> points(N + 1);
     for (int i = 0; i <= N; ++i)
     {
-        Imath::V3f pp = p + R * x_axis * cos((2 * M_PI * i) / N) + R * y_axis * sin((2 * M_PI * i) / N) + up_shift * n;
-        points[i] = GfVec3f(pp.x, pp.y, pp.z);
+        points[i] = p + R * x_axis * cos((2 * M_PI * i) / N) + R * y_axis * sin((2 * M_PI * i) / N) + up_shift * n;
     }
 
     auto active_view = ApplicationUI::instance().get_active_view();
@@ -314,9 +308,7 @@ void PointInstancerToolContext::draw(const ViewportViewPtr& viewport_view, Viewp
         return;
 
     auto viewport = active_view->get_gl_widget();
-    Imath::M44f m = get_vp_matrix(viewport);
-    GfMatrix4f mf = { m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3],
-                      m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3] };
+    GfMatrix4f mf = get_vp_matrix(viewport);
 
     draw_manager->begin_drawable();
     draw_manager->set_mvp_matrix(mf);
@@ -327,14 +319,14 @@ void PointInstancerToolContext::draw(const ViewportViewPtr& viewport_view, Viewp
     draw_manager->set_mvp_matrix(mf);
     draw_manager->set_prim_type(ViewportUiDrawManager::PrimitiveTypeLines);
     float half_R = R / 2;
-    draw_manager->line(GfVec3f(p.x, p.y, p.z), GfVec3f(p.x + n.x * half_R, p.y + n.y * half_R, p.z + n.z * half_R));
+    draw_manager->line(p, p + n * half_R);
     draw_manager->end_drawable();
 
     std::vector<GfVec3f> instances_positions;
     for (auto uv : m_generated_uv)
     {
-        Imath::V3f pp = p + R * x_axis * uv.x + R * y_axis * uv.y;
-        instances_positions.push_back(GfVec3f(pp.x, pp.y, pp.z));
+        GfVec3f pp = p + R * x_axis * uv[0] + R * y_axis * uv[1];
+        instances_positions.push_back(pp);
     }
     draw_manager->begin_drawable();
     draw_manager->set_mvp_matrix(mf);
@@ -483,10 +475,8 @@ bool PointInstancerToolContext::on_mouse_move(const ViewportMouseEvent& mouse_ev
     if (intersect.second)
     {
         const auto& hit = intersect.first.front();
-        auto usd_p = hit.worldSpaceHitPoint;
-        m_p = Imath::V3f(usd_p[0], usd_p[1], usd_p[2]);
-        auto usd_n = hit.worldSpaceHitNormal;
-        m_n = Imath::V3f(usd_n[0], usd_n[1], usd_n[2]);
+        m_p = GfVec3f(hit.worldSpaceHitPoint);
+        m_n = hit.worldSpaceHitNormal;
         if (m_geom_id != hit.objectId)
         {
             if (m_properties.mode == Mode::Random)

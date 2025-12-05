@@ -14,16 +14,11 @@
 #include <QComboBox>
 
 #include "opendcc/usd_editor/common_tools/viewport_select_tool_settings_widget.h"
-#include <QVBoxLayout>
-#include <QButtonGroup>
 #include <QCheckBox>
-#include <QRadioButton>
-#include <QGroupBox>
 #include <QLabel>
 #include <QToolBar>
 #include <QDoubleSpinBox>
 #include <QActionGroup>
-#include <array>
 #include "opendcc/app/core/application.h"
 #include "opendcc/app/viewport/tool_settings_view.h"
 #include "opendcc/app/viewport/viewport_widget.h"

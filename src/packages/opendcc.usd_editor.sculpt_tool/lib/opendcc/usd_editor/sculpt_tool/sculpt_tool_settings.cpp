@@ -11,21 +11,15 @@
 #include <array>
 #include <QComboBox>
 
-#include <QVBoxLayout>
-#include <QButtonGroup>
 #include <QCheckBox>
-#include <QRadioButton>
-#include <QGroupBox>
 #include <QLabel>
 #include <QToolBar>
 #include <QDoubleSpinBox>
 #include <QActionGroup>
-#include <array>
 
 #include "opendcc/usd_editor/common_tools/viewport_select_tool_settings_widget.h"
 #include "opendcc/app/viewport/tool_settings_view.h"
 #include "opendcc/app/viewport/viewport_widget.h"
-#include "opendcc/app/core/application.h"
 #include "opendcc/base/logging/logger.h"
 
 #include "opendcc/usd_editor/sculpt_tool/sculpt_tool_settings.h"
