@@ -522,7 +522,6 @@ if(WIN32)
         # Manual installation of USD targets that may be missing from automatic dependency resolution These targets are
         # often not detected by CMake's GET_RUNTIME_DEPENDENCIES due to dynamic loading or conditional compilation in
         # newer USD versions
-        MESSAGE(INFO "Adding manual USD dependencies for installation")
         if(TARGET hdGp)
             get_target_property(_hdgp_lib hdGp LOCATION)
             if(_hdgp_lib)
@@ -531,12 +530,9 @@ if(WIN32)
         endif()
 
         if(TARGET usdHydra)
-            message(INFO "Adding usdHydra to installation list")
             get_target_property(_usdhydra_lib usdHydra LOCATION)
             if(_usdhydra_lib)
-                message(INFO "Found usdHydra library at ${_usdhydra_lib}")
                 list(APPEND INSTALL_SHARED_LIBS "${_usdhydra_lib}")
-                message(INFO "INSTALL_SHARED_LIBS now contains: ${INSTALL_SHARED_LIBS}")
             endif()
         endif()
 
