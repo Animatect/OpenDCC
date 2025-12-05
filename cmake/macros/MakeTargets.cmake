@@ -10,7 +10,7 @@ function(get_usd_env EXTRA_ENVIRONMENT USD_ENVIRONMENT_VAR)
     set(_result "")
     list(APPEND _result "${USD_LIBRARY_DIR}")
     list(APPEND _result "${Boost_LIBRARY_DIR_RELEASE}")
-    list(APPEND _result "${TBB_INCLUDE_DIRS}/../bin")
+    list(APPEND _result "${TBB_INCLUDE_DIRS}/../lib")
     list(APPEND _result "${USD_GENSCHEMA_DIR}")
     list(APPEND _result "${EXTRA_ENVIRONMENT}") # ????
     if(WIN32)

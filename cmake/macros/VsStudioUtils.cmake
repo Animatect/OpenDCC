@@ -67,11 +67,6 @@ if(DCC_MAKE_VSDEBUG_LAUNCHER
         message(FATAL_ERROR "OSL_ROOT is not defined")
     endif()
 
-    if(DEFINED ILMBASE_HOME)
-        list(APPEND ENV_PATH ${ILMBASE_HOME}/bin)
-    else()
-        message(FATAL_ERROR "ILMBASE_HOME is not defined")
-    endif()
     if(DCC_BUILD_ARNOLD_SUPPORT)
         if(DEFINED ARNOLDUSD_ROOT)
             list(APPEND ${SO_ENV_NAME} ${ARNOLDUSD_ROOT}/lib)

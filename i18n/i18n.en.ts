@@ -1650,12 +1650,12 @@
 <context>
     <name>preferences</name>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="249"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="247"/>
         <source>Save</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="253"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="251"/>
         <source>Close</source>
         <translation></translation>
     </message>
@@ -1847,58 +1847,58 @@
 <context>
     <name>preferences.timeline</name>
     <message>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="38"/>
         <location filename="../src/python/opendcc/preferences_widget.py" line="39"/>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="40"/>
         <source>Timeline</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="45"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="44"/>
         <source>Play Every Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="46"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="45"/>
         <source>Real-time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="56"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="55"/>
         <source>Snap:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="57"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="56"/>
         <source>Playback Mode:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="58"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="57"/>
         <source>Playback by:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="65"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="64"/>
         <source>Appearance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="109"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="108"/>
         <source>Cursor:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="110"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="109"/>
         <source>Keyframe:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="111"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="110"/>
         <source>Background:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="112"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="111"/>
         <source>Subdivisions:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2019,7 +2019,7 @@
 <context>
     <name>preferences.window_title</name>
     <message>
-        <location filename="../src/python/opendcc/preferences_widget.py" line="207"/>
+        <location filename="../src/python/opendcc/preferences_widget.py" line="206"/>
         <source>Preferences</source>
         <translation></translation>
     </message>

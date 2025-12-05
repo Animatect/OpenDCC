@@ -54,8 +54,8 @@ make_folder("render_view" image_view)
 
 target_link_libraries(
     image_view
-    $<$<VERSION_LESS:${ILMBASE_VERSION},3.0.0>:${ILMBASE_HALF_LIBRARY_RELEASE}>
-    ${ILMBASE_IMATH_LIBRARY_RELEASE}
+    Imath::Imath
+    OpenEXR::OpenEXR
     ${Boost_REGEX_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}

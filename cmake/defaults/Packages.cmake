@@ -197,17 +197,13 @@ include_directories(${QT_INCLUDES})
 
 find_package(qtadvanceddocking REQUIRED)
 
-find_package(IlmBase REQUIRED)
 if(DCC_BUILD_EDITORIAL)
     find_package(OpenTimelineIO REQUIRED)
 endif()
-if(MSVC)
-    if(ILMBASE_VERSION VERSION_LESS "3.0.0")
-        add_definitions(-DOPENEXR_DLL)
-    else()
-        add_definitions(-DIMATH_DLL)
-    endif()
-endif()
+
+find_package(Imath REQUIRED)
+find_package(OpenEXR REQUIRED)
+
 if(DCC_PYSIDE_CMAKE_FIND)
     find_package(Shiboken2 REQUIRED)
     find_package(PySide2 REQUIRED)

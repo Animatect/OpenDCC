@@ -466,7 +466,18 @@ if(WIN32)
         list(APPEND _search_dirs ${GLEW_LOCATION}/bin)
     endif()
     if(DCC_INSTALL_ILMBASE)
-        list(APPEND _search_dirs ${ILMBASE_HOME}/bin)
+        if(NOT DEFINED ILMBASE_HOME
+           AND TARGET OpenEXR::OpenEXR
+           AND TARGET Imath::Imath)
+            # we need to use modern OpenEXR::OpenEXR and Imath::Imath Targets
+            get_target_property(_openexr_lib OpenEXR::OpenEXR LOCATION)
+            get_filename_component(_openexr_lib_dir ${_openexr_lib} DIRECTORY)
+            get_target_property(_imath_lib Imath::Imath LOCATION)
+            get_filename_component(_imath_lib_dir ${_imath_lib} DIRECTORY)
+            list(APPEND _search_dirs ${_openexr_lib_dir} ${_imath_lib_dir})
+        else()
+            list(APPEND _search_dirs ${ILMBASE_HOME}/bin)
+        endif()
     endif()
     if(DCC_INSTALL_OCIO)
         list(APPEND _search_dirs ${OCIO_LOCATION}/bin)
@@ -501,7 +512,19 @@ if(WIN32)
         # dependency search
         if(WIN32)
             get_filename_component(_python_root ${PYTHON_EXECUTABLE} DIRECTORY)
-            get_filename_component(_python_lib_name ${PYTHON_LIBRARY} NAME_WE)
+
+            # Use modern Python3::Python target if available, fallback to PYTHON_LIBRARY parsing
+            if(TARGET Python3::Python)
+                get_target_property(_python_lib_path Python3::Python IMPORTED_IMPLIB_RELEASE)
+                if(NOT _python_lib_path)
+                    get_target_property(_python_lib_path Python3::Python IMPORTED_IMPLIB)
+                endif()
+            else()
+                # Handle legacy PYTHON_LIBRARY - assume clean path without generator expressions
+                set(_python_lib_path "${PYTHON_LIBRARY}")
+            endif()
+
+            get_filename_component(_python_lib_name ${_python_lib_path} NAME_WE)
             file(INSTALL "${_python_root}/${_python_lib_name}.dll" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
             if(DCC_USE_PYTHON_3)
                 file(INSTALL "${_python_root}/python3.dll" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
