@@ -124,6 +124,8 @@ private:
     Settings::SettingChangedHandle m_timeline_snap_callback_id;
     Settings::SettingChangedHandle m_timeline_keyframe_current_time_indicator_type_callback_id;
     Settings::SettingChangedHandle m_timeline_keyframe_display_type_callback_id;
+    Settings::SettingChangedHandle m_timeline_background_type_callback_id;
+    Settings::SettingChangedHandle m_timeline_subdivisions_callback_id;
 
     Session::StageChangedCallbackHandle m_timeline_stage_callback_id;
     Application::CallbackHandle m_timeline_current_stage_callback_id;

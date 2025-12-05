@@ -210,6 +210,20 @@ public:
      */
     void set_keyframe_display_type(KeyframeDisplayType type);
 
+    /**
+     * @brief Changes the appearance of background.
+     *
+     * @param type The type of background.
+     */
+    void set_background_type(TimebarBackgroundType type);
+
+    /**
+     * @brief Changes the appearance of subdivisions.
+     *
+     * @param type Subdivisions.
+     */
+    void set_subdivisions(bool subdivisions);
+
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
     virtual void enterEvent(QEvent *event) override;
@@ -260,6 +274,7 @@ private:
 
     CurrentTimeIndicator m_current_time_indicator = CurrentTimeIndicator::Default;
     KeyframeDisplayType m_keyframe_type = KeyframeDisplayType::Line;
+    TimebarBackgroundType m_background_type = TimebarBackgroundType::Stripped;
 
     bool m_subdivisions = true;
 

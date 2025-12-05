@@ -383,15 +383,24 @@ void TimeBarWidget::paintEvent(QPaintEvent *event)
 
     num_sectors = (m_endTime - new_startTime) / dt;
 
-    // stripes
-    for (int i = 0; i <= num_sectors; i += 2)
+    // background
+    switch (m_background_type)
     {
-        float pos1 = time_to_x_pos(i * dt + new_startTime);
-        float pos2 = time_to_x_pos((i + 1) * dt + new_startTime);
+    case TimebarBackgroundType::Stripped:
+    {
+        for (int i = 0; i <= num_sectors; i += 2)
+        {
+            float pos1 = time_to_x_pos(i * dt + new_startTime);
+            float pos2 = time_to_x_pos((i + 1) * dt + new_startTime);
 
-        QColor stripe_color = QColor::fromRgb(0, 0, 0, 40);
+            QColor stripe_color = QColor::fromRgb(0, 0, 0, 40);
 
-        painter.fillRect(pos1, 0, pos2 - pos1, _bottom + 1, stripe_color);
+            painter.fillRect(pos1, 0, pos2 - pos1, _bottom + 1, stripe_color);
+        }
+    }
+    break;
+    default:
+        break;
     }
 
     for (int i = 0; i <= num_sectors; i++)
@@ -782,6 +791,18 @@ void TimeBarWidget::set_current_time_indicator_type(CurrentTimeIndicator cursor)
 void TimeBarWidget::set_keyframe_display_type(KeyframeDisplayType type)
 {
     m_keyframe_type = type;
+    update();
+}
+
+void TimeBarWidget::set_background_type(TimebarBackgroundType type)
+{
+    m_background_type = type;
+    update();
+}
+
+void TimeBarWidget::set_subdivisions(bool subdivisions)
+{
+    m_subdivisions = subdivisions;
     update();
 }
 

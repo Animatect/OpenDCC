@@ -86,9 +86,29 @@ class TimelinePage(QtWidgets.QWidget):
         keyframe_layout.addStretch()
         self.keyframe_key = "timeline.keyframe_display_type"
 
+        self.background_ui = QtWidgets.QComboBox()
+        self.background_ui.addItems(
+            [
+                i18n("preferences.timeline", "Striped"),
+                i18n("preferences.timeline", "Flat"),
+            ]
+        )
+        background_layout = QtWidgets.QHBoxLayout()
+        background_layout.addWidget(self.background_ui)
+        background_layout.addStretch()
+        self.background_key = "timeline.background_type"
+
+        self.subdivisions_ui = QtWidgets.QCheckBox()
+        subdivisions_layout = QtWidgets.QHBoxLayout()
+        subdivisions_layout.addWidget(self.subdivisions_ui)
+        subdivisions_layout.addStretch()
+        self.subdivisions_key = "timeline.subdivisions_type"
+
         appearance_form = QtWidgets.QFormLayout()
         appearance_form.addRow(i18n("preferences.timeline", "Cursor:"), cursor_layout)
         appearance_form.addRow(i18n("preferences.timeline", "Keyframe:"), keyframe_layout)
+        appearance_form.addRow(i18n("preferences.timeline", "Background:"), background_layout)
+        appearance_form.addRow(i18n("preferences.timeline", "Subdivisions:"), subdivisions_layout)
 
         appearance_rollout.set_layout(appearance_form)
 
@@ -105,6 +125,8 @@ class TimelinePage(QtWidgets.QWidget):
 
         self.cursor_old = settings.get_int(self.cursor_key, 0)
         self.keyframe_old = settings.get_int(self.keyframe_key, 0)
+        self.background_old = settings.get_int(self.background_key, 0)
+        self.subdivisions_old = settings.get_int(self.subdivisions_key, 0)
 
         self.restore_previous_settings()
         self.snap_ui.stateChanged.connect(self.set_snap_value_mode)
@@ -112,6 +134,8 @@ class TimelinePage(QtWidgets.QWidget):
         self.playback_by.value_changed.connect(self.set_playback_by)
         self.cursor_ui.currentIndexChanged.connect(self.set_cursor)
         self.keyframe_ui.currentIndexChanged.connect(self.set_keyframe)
+        self.background_ui.currentIndexChanged.connect(self.set_background)
+        self.subdivisions_ui.stateChanged.connect(self.set_subdivisions)
 
     def set_snap_value_mode(self, state):
         value = True if state == QtCore.Qt.Checked else False
@@ -135,18 +159,32 @@ class TimelinePage(QtWidgets.QWidget):
         settings = dcc_core.Application.instance().get_settings()
         settings.set_int(self.keyframe_key, value)
 
+    def set_background(self, value):
+        settings = dcc_core.Application.instance().get_settings()
+        settings.set_int(self.background_key, value)
+
+    def set_subdivisions(self, state):
+        value = True if state == QtCore.Qt.Checked else False
+        settings = dcc_core.Application.instance().get_settings()
+        settings.set_bool(self.subdivisions_key, value)
+
     def save_settings(self):
         self.snap_value_old = self.snap_ui.isChecked()
         self.playback_mode_old = self.playback_mode.currentIndex()
         self.playback_by_old = self.playback_by.get_value()
         self.cursor_old = self.cursor_ui.currentIndex()
         self.keyframe_old = self.keyframe_ui.currentIndex()
+        self.background_old = self.background_ui.currentIndex()
+        self.subdivisions_old = self.subdivisions_ui.isChecked()
+
         settings = dcc_core.Application.instance().get_settings()
         settings.set_bool(self.snap_key, self.snap_value_old)
         settings.set_int(self.playback_mode_key, self.playback_mode_old)
         settings.set_double(self.playback_by_key, self.playback_by_old)
         settings.set_int(self.cursor_key, self.cursor_old)
         settings.set_int(self.keyframe_key, self.keyframe_old)
+        settings.set_int(self.background_key, self.background_old)
+        settings.set_bool(self.subdivisions_ui, self.subdivisions_old)
 
     def restore_previous_settings(self):
         self.snap_ui.setChecked(self.snap_value_old)
@@ -157,6 +195,8 @@ class TimelinePage(QtWidgets.QWidget):
 
         self.cursor_ui.setCurrentIndex(self.cursor_old)
         self.keyframe_ui.setCurrentIndex(self.keyframe_old)
+        self.background_ui.setCurrentIndex(self.background_old)
+        self.subdivisions_ui.setChecked(self.subdivisions_old)
 
 
 class PreferencesWidget(QtWidgets.QWidget):

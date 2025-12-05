@@ -32,6 +32,15 @@ enum class CurrentTimeIndicator
     Arrow /**< Arrow-shaped current time indicator*/
 };
 
+/**
+ * @brief Enumeration for the background style of the timebar widget.
+ */
+enum class TimebarBackgroundType
+{
+    Stripped, /**< Default style */
+    Flat /**< Flat color */
+};
+
 OPENDCC_UI_TIMELINE_WIDGET_API QString to_timecode(double frame, double fps);
 
 OPENDCC_NAMESPACE_CLOSE

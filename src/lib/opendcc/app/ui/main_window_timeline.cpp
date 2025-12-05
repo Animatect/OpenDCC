@@ -279,6 +279,31 @@ void MainWindow::init_timeline_ui()
             m_timeline_widget->time_bar_widget()->set_keyframe_display_type(get_keyframe_display_type(val.get<int>(0)));
         });
 
+    auto get_background_type = [](int display_type) {
+        switch (display_type)
+        {
+        case 0:
+            return TimebarBackgroundType::Stripped;
+        case 1:
+            return TimebarBackgroundType::Flat;
+
+        default:
+            return TimebarBackgroundType::Flat;
+        }
+    };
+
+    m_timeline_widget->time_bar_widget()->set_background_type(get_background_type(settings->get("timeline.background_type", 0)));
+    m_timeline_background_type_callback_id = Application::instance().get_settings()->register_setting_changed(
+        "timeline.background_type", [this, get_background_type](const Settings::Value& val) {
+            m_timeline_widget->time_bar_widget()->set_background_type(get_background_type(val.get<int>(0)));
+        });
+
+    m_timeline_widget->time_bar_widget()->set_subdivisions(settings->get("timeline.subdivisions_type", true));
+    m_timeline_subdivisions_callback_id =
+        Application::instance().get_settings()->register_setting_changed("timeline.subdivisions_type", [this](const Settings::Value& val) {
+            m_timeline_widget->time_bar_widget()->set_subdivisions(val.get<bool>(0));
+        });
+
     m_timeline_stage_callback_id = Application::instance().get_session()->register_stage_changed_callback(
         Session::StageChangedEventType::CURRENT_STAGE_OBJECT_CHANGED, [this](PXR_NS::UsdNotice::ObjectsChanged const& notice) {
             auto notice_stage = notice.GetStage();
