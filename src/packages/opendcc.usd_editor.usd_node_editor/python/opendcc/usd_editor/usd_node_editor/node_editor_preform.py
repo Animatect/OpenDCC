@@ -27,7 +27,7 @@ class EntryScreen(QtWidgets.QWidget):
 
         choice_layout = QtWidgets.QHBoxLayout()
         choice_layout.addStretch()
-        main_layout.addLayout(choice_layout, alignment=QtCore.Qt.AlignCenter)
+        main_layout.addLayout(choice_layout)
 
         self.create_new_btn = QtWidgets.QPushButton()
         self.create_new_btn.clicked.connect(self._on_create_new)
