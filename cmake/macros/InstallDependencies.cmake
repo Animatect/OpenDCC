@@ -37,6 +37,13 @@ option(DCC_INSTALL_ARNOLD "" OFF)
 
 option(DCC_INSTALL_GRAPHVIZ "" OFF)
 
+option(DCC_INSTALL_OPENVDB "" OFF)
+
+# Find OpenVDB if installation is enabled
+if(DCC_INSTALL_OPENVDB)
+    find_package(OpenVDB REQUIRED)
+endif()
+
 function(install_qt5_plugin _qt_plugin_name _qt_plugins_var)
     get_target_property(_qt_plugin_path "${_qt_plugin_name}" LOCATION)
     get_filename_component(_qt_plugin_file "${_qt_plugin_path}" NAME)
@@ -48,6 +55,37 @@ function(install_qt5_plugin _qt_plugin_name _qt_plugins_var)
         DESTINATION "${_qt_plugin_dest}"
         ${COMPONENT})
 endfunction()
+
+if(DCC_INSTALL_OPENVDB AND NOT DCC_HOUDINI_SUPPORT)
+    set(_pyopenvdb_found FALSE)
+    if(WIN32)
+        # Look for pyopenvdb with pybind naming convention like pyopenvdb.cp311-win_amd64.pyd
+        file(GLOB _pyopenvdb_candidates "${OPENVDB_LOCATION}/lib/python*/site-packages/pyopenvdb*.pyd")
+        if(NOT _pyopenvdb_candidates)
+            file(GLOB _pyopenvdb_candidates "${OPENVDB_LOCATION}/lib/python*/site-packages/pyopenvdb.pyd")
+        endif()
+    else()
+
+        file(GLOB _pyopenvdb_candidates "${OPENVDB_LOCATION}/lib/python*/site-packages/pyopenvdb*.so")
+        if(NOT _pyopenvdb_candidates)
+            # Fallback to lib64 on Linux
+            file(GLOB _pyopenvdb_candidates "${OPENVDB_LOCATION}/lib64/python*/site-packages/pyopenvdb*.so")
+        endif()
+    endif()
+
+    if(_pyopenvdb_candidates)
+        list(GET _pyopenvdb_candidates 0 _pyopenvdb_lib)
+        if(EXISTS "${_pyopenvdb_lib}")
+            install(FILES "${_pyopenvdb_lib}" DESTINATION ${DCC_PYTHON_INSTALL_SITE_PACKAGES_ROOT})
+            set(_pyopenvdb_found TRUE)
+        endif()
+    endif()
+
+    if(NOT _pyopenvdb_found)
+        message(WARNING "pyopenvdb not found in ${OPENVDB_LOCATION}/lib/python*/site-packages/")
+    endif()
+endif()
+
 
 # install linux shell script to setup runtime env
 if(NOT WIN32)
