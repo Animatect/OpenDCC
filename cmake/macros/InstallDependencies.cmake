@@ -266,19 +266,38 @@ if(DCC_INSTALL_OCIO AND NOT DCC_HOUDINI_SUPPORT)
         set(OCIO_LOCATION /usr/local)
     endif()
     if(WIN32)
-        set(OCIO_PYTHON_LIB ${OCIO_LOCATION}/lib/site-packages/PyOpenColorIO.pyd)
+        set(OCIO_PYTHON_MODULE ${OCIO_LOCATION}/lib/site-packages/PyOpenColorIO)
     else()
         if(${OCIO_VERSION} VERSION_LESS "2.1" OR APPLE)
-            set(OCIO_PYTHON_LIB
-                ${OCIO_LOCATION}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO.so
+            set(OCIO_PYTHON_MODULE
+                ${OCIO_LOCATION}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO
             )
         else()
-            set(OCIO_PYTHON_LIB
-                ${OCIO_LOCATION}/lib64/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO.so
+            set(OCIO_PYTHON_MODULE
+                ${OCIO_LOCATION}/lib64/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO
             )
         endif()
     endif()
-    install(FILES ${OCIO_PYTHON_LIB} DESTINATION ${DCC_PYTHON_INSTALL_SITE_PACKAGES_ROOT})
+    # For OCIO 2.0+ PyOpenColorIO is a directory containing __init__.py and binary modules
+    if(IS_DIRECTORY ${OCIO_PYTHON_MODULE})
+        install(DIRECTORY ${OCIO_PYTHON_MODULE} DESTINATION ${DCC_PYTHON_INSTALL_SITE_PACKAGES_ROOT})
+    else()
+        # Fallback for older OCIO versions with single .pyd/.so file
+        if(WIN32)
+            set(OCIO_PYTHON_LIB ${OCIO_LOCATION}/lib/site-packages/PyOpenColorIO.pyd)
+        else()
+            if(${OCIO_VERSION} VERSION_LESS "2.1" OR APPLE)
+                set(OCIO_PYTHON_LIB
+                    ${OCIO_LOCATION}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO.so
+                )
+            else()
+                set(OCIO_PYTHON_LIB
+                    ${OCIO_LOCATION}/lib64/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/PyOpenColorIO.so
+                )
+            endif()
+        endif()
+        install(FILES ${OCIO_PYTHON_LIB} DESTINATION ${DCC_PYTHON_INSTALL_SITE_PACKAGES_ROOT})
+    endif()
 endif()
 
 if(DCC_INSTALL_OIIO AND NOT DCC_HOUDINI_SUPPORT)
@@ -537,7 +556,7 @@ if(WIN32)
         list(APPEND _search_dirs ${_qt_lib_dir})
     endif()
     if(DCC_INSTALL_TBB)
-        list(APPEND _search_dirs ${TBB_ROOT_DIR}/bin)
+        list(APPEND _search_dirs ${TBB_ROOT_DIR}/lib)
     endif()
     if(DCC_INSTALL_USD)
         list(APPEND _search_dirs ${USD_LIBRARY_DIR})
