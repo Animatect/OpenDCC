@@ -16,8 +16,12 @@ OPENDCC_NAMESPACE_OPEN
 
 namespace commands
 {
-    class OPENDCC_API UndoRouter : boost::noncopyable
+    class OPENDCC_API UndoRouter
     {
+    public:
+        // noncopyable
+        UndoRouter(const UndoRouter&) = delete;
+        UndoRouter& operator=(const UndoRouter&) = delete;
     private:
         friend class UsdEditsUndoBlock;
         friend class UsdEditsBlock;
