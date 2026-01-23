@@ -33,6 +33,13 @@ set(DCC_ADDITIONAL_CONFIGS
     CACHE STRING "List of additional .toml config files")
 
 option(DCC_BUILD_BULLET_PHYSICS "" ON)
+
+# DCC_BUILD_SHIBOKEN_BINDINGS: Generate PySide2/Shiboken Python bindings for UI widgets
+# This requires a compatible libclang version. Houdini's bundled shiboken2_generator
+# has an older libclang that doesn't work well with MSVC 2022 STL headers.
+# Set to OFF to skip Shiboken binding generation (faster builds, fewer errors).
+option(DCC_BUILD_SHIBOKEN_BINDINGS "Build PySide2/Shiboken Python bindings" ON)
+
 option(DCC_VERBOSE_SHIBOKEN_OUTPUT "Enable rich debugging shiboken generator output." OFF)
 option(DCC_DEBUG_BUILD "Enable debug mode" OFF)
 if(DCC_VERBOSE_SHIBOKEN_OUTPUT)

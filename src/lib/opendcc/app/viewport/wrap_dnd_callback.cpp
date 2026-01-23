@@ -18,7 +18,7 @@ OPENDCC_NAMESPACE_OPEN
 
 using namespace pybind11;
 
-struct ViewportDndCallbackWrap : ViewportDndCallback
+struct ViewportDndCallbackWrap : ViewportDndCallback, pybind11::trampoline_self_life_support
 {
     using ViewportDndCallback::ViewportDndCallback;
 

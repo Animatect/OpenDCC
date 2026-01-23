@@ -660,6 +660,13 @@ function(
 endfunction()
 
 function(opendcc_make_shiboken_bindings TARGET_NAME)
+    # Skip Shiboken binding generation if disabled
+    # This is useful for Houdini builds where libclang is incompatible with MSVC 2022
+    if(NOT DCC_BUILD_SHIBOKEN_BINDINGS)
+        message(STATUS "Skipping Shiboken bindings for ${TARGET_NAME} (DCC_BUILD_SHIBOKEN_BINDINGS=OFF)")
+        return()
+    endif()
+
     set(options VERBOSE
                 # QT_AUTOMOC
     )
