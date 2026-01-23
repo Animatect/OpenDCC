@@ -33,24 +33,66 @@ else()
     set(EMBREE_FIND_VERSION 3)
 endif()
 
+# Support Houdini's embree_sidefx variant
 if(APPLE)
-    set(EMBREE_LIB_NAME libembree3.dylib)
+    set(EMBREE_LIB_NAMES libembree3.dylib libembree_sidefx.dylib)
 elseif(UNIX)
-    set(EMBREE_LIB_NAME libembree3.so)
+    set(EMBREE_LIB_NAMES libembree3.so libembree_sidefx.so)
 elseif(WIN32)
-    set(EMBREE_LIB_NAME embree3.lib)
+    set(EMBREE_LIB_NAMES embree3.lib embree_sidefx.lib)
+endif()
+
+# Build search paths including Houdini locations
+set(_embree_search_lib_paths
+    "${EMBREE_LOCATION}/lib64"
+    "${EMBREE_LOCATION}/lib"
+    "$ENV{EMBREE_LOCATION}/lib64"
+    "$ENV{EMBREE_LOCATION}/lib"
+)
+
+# Add Houdini paths if available
+if(DEFINED HOUDINI_ROOT)
+    list(APPEND _embree_search_lib_paths
+        "${HOUDINI_ROOT}/custom/houdini/dsolib"
+        "${HOUDINI_ROOT}/dsolib"
+    )
 endif()
 
 find_library(
-    EMBREE_LIBRARY "${EMBREE_LIB_NAME}"
-    HINTS "${EMBREE_LOCATION}/lib64" "${EMBREE_LOCATION}/lib" "$ENV{EMBREE_LOCATION}/lib64" "$ENV{EMBREE_LOCATION}/lib"
+    EMBREE_LIBRARY
+    NAMES ${EMBREE_LIB_NAMES}
+    HINTS ${_embree_search_lib_paths}
     DOC "Embree library path")
 
+# Build include search paths
+set(_embree_search_include_paths
+    "${EMBREE_LOCATION}/include"
+    "$ENV{EMBREE_LOCATION}/include"
+)
+
+# Add Houdini paths if available
+if(DEFINED HOUDINI_ROOT)
+    list(APPEND _embree_search_include_paths
+        "${HOUDINI_ROOT}/toolkit/include"
+    )
+endif()
+
+# First try standard layout (embree3/rtcore.h)
 find_path(
     EMBREE_INCLUDE_DIR embree${EMBREE_FIND_VERSION}/rtcore.h
-    HINTS "${EMBREE_LOCATION}/include" "$ENV{EMBREE_LOCATION}/include"
+    HINTS ${_embree_search_include_paths}
     DOC "Embree headers path")
 
+# If not found, try Houdini layout where headers are directly in embree3/ folder
+if(NOT EMBREE_INCLUDE_DIR AND DEFINED HOUDINI_ROOT)
+    # Houdini has headers at toolkit/include/embree3/rtcore.h
+    # So we need to set include dir to toolkit/include
+    if(EXISTS "${HOUDINI_ROOT}/toolkit/include/embree3/rtcore.h")
+        set(EMBREE_INCLUDE_DIR "${HOUDINI_ROOT}/toolkit/include" CACHE PATH "Embree headers path" FORCE)
+    endif()
+endif()
+
+# Try to extract version - first check for rtcore_version.h (standard Embree)
 if(EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_version.h")
     file(STRINGS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_version.h" TMP
          REGEX "^#define RTCORE_VERSION_MAJOR.*$")
@@ -60,6 +102,19 @@ if(EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERS
     string(REGEX MATCHALL "[0-9]+" MINOR ${TMP})
     file(STRINGS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_version.h" TMP
          REGEX "^#define RTCORE_VERSION_PATCH.*$")
+    string(REGEX MATCHALL "[0-9]+" PATCH ${TMP})
+
+    set(EMBREE_VERSION ${MAJOR}.${MINOR}.${PATCH})
+# Also check rtcore_config.h (Houdini's Embree uses RTC_VERSION_* macros here)
+elseif(EMBREE_INCLUDE_DIR AND EXISTS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_config.h")
+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_config.h" TMP
+         REGEX "^#define RTC_VERSION_MAJOR.*$")
+    string(REGEX MATCHALL "[0-9]+" MAJOR ${TMP})
+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_config.h" TMP
+         REGEX "^#define RTC_VERSION_MINOR.*$")
+    string(REGEX MATCHALL "[0-9]+" MINOR ${TMP})
+    file(STRINGS "${EMBREE_INCLUDE_DIR}/embree${EMBREE_FIND_VERSION}/rtcore_config.h" TMP
+         REGEX "^#define RTC_VERSION_PATCH.*$")
     string(REGEX MATCHALL "[0-9]+" PATCH ${TMP})
 
     set(EMBREE_VERSION ${MAJOR}.${MINOR}.${PATCH})

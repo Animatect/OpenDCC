@@ -1,9 +1,22 @@
 # Locate OpenSubdiv library This module defines OpenSubdiv_FOUND OPENSUBDIV_LIBRARIES OPENSUBDIV_CPU_LIBRARY
 # OPENSUBDIV_GPU_LIBRARY OPENSUBDIV_INCLUDE_DIR
 #
+
+# Support Houdini's bundled OpenSubdiv
+if(DEFINED HOUDINI_ROOT)
+    list(APPEND _opensubdiv_search_paths
+        "${HOUDINI_ROOT}/toolkit/include"
+        "${HOUDINI_ROOT}/toolkit"
+    )
+    list(APPEND _opensubdiv_lib_paths
+        "${HOUDINI_ROOT}/custom/houdini/dsolib"
+        "${HOUDINI_ROOT}/dsolib"
+    )
+endif()
+
 find_path(
     OPENSUBDIV_INCLUDE_DIR opensubdiv/version.h
-    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR}
+    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR} ${_opensubdiv_search_paths}
     PATH_SUFFIXES include/
     PATHS ~/Library/Frameworks
           /Library/Frameworks
@@ -14,15 +27,15 @@ find_path(
 
 find_library(
     OPENSUBDIV_GPU_LIBRARY
-    NAMES osdGPU
-    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR}
+    NAMES osdGPU libosdGPU_md osdGPU_md
+    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR} ${_opensubdiv_lib_paths}
     PATH_SUFFIXES lib64 lib
     PATHS ~/Library/Frameworks /Library/Frameworks /sw /opt/local /opt/csw /opt)
 
 find_library(
     OPENSUBDIV_CPU_LIBRARY
-    NAMES osdCPU
-    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR}
+    NAMES osdCPU libosdCPU_md osdCPU_md
+    HINTS $ENV{OPENSUBDIV_DIR} ${OPENSUBDIV_DIR} ${_opensubdiv_lib_paths}
     PATH_SUFFIXES lib64 lib
     PATHS ~/Library/Frameworks /Library/Frameworks /sw /opt/local /opt/csw /opt)
 

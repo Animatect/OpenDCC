@@ -13,9 +13,15 @@ set(GRAPHVIZ_LIBRARIES "")
 find_program(
     GRAPHVIZ_dot_PATH dot
     HINTS ${GRAPHVIZ_ROOT}
-    PATH_SUFFIXES bin NO_CACHE)
+    PATH_SUFFIXES bin tools/graphviz NO_CACHE)
 
-get_filename_component(GRAPHVIZ_BINARY_DIR ${GRAPHVIZ_dot_PATH} DIRECTORY)
+# GRAPHVIZ_BINARY_DIR is optional - vcpkg doesn't include dot executable
+if(GRAPHVIZ_dot_PATH)
+    get_filename_component(GRAPHVIZ_BINARY_DIR ${GRAPHVIZ_dot_PATH} DIRECTORY)
+else()
+    # Set to bin directory even without dot - libraries are what we need for building
+    set(GRAPHVIZ_BINARY_DIR "${GRAPHVIZ_ROOT}/bin")
+endif()
 
 foreach(_lib ${_graphviz_libs})
     find_library(

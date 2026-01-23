@@ -4,6 +4,8 @@ option(DCC_BUILD_EXPRESSIONS_ENGINE "" ON)
 option(DCC_BUILD_RENDER_VIEW "" ON)
 option(DCC_RENDER_VIEW_WIN_GUI_EXECUTABLE "" ON)
 
+# DCC_EMBEDDED_PYTHON_HOME: When ON, the app looks for Python in <app>/python/
+# This should be OFF for Houdini builds which use Houdini's Python
 option(DCC_EMBEDDED_PYTHON_HOME "" ON)
 
 option(DCC_PYSIDE_CMAKE_FIND

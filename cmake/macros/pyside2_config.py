@@ -39,7 +39,7 @@
 #############################################################################
 
 import os, glob, re, sys
-from distutils import sysconfig
+import sysconfig
 
 generic_error = (
     " Did you forget to activate your virtualenv? Or perhaps"
@@ -274,7 +274,31 @@ def find_shiboken2_module():
 
 
 def find_shiboken2_generator():
-    return find_package_path("shiboken2_generator")
+    # First try environment variable (set by build script)
+    env_path = os.environ.get("SHIBOKEN_GENERATOR_DIR")
+    if env_path and os.path.exists(env_path):
+        return clean_path(os.path.realpath(env_path))
+
+    # Try standard package path
+    result = find_package_path("shiboken2_generator")
+    if result:
+        return result
+
+    # Fallback: check if shiboken2.exe exists in shiboken2 module directory
+    shiboken2_path = find_package_path("shiboken2")
+    if shiboken2_path:
+        exe_path = os.path.join(shiboken2_path, "shiboken2" + (".exe" if sys.platform == "win32" else ""))
+        if os.path.exists(exe_path):
+            return shiboken2_path
+
+    # Fallback: check PySide2 directory
+    pyside2_path = find_pyside2()
+    if pyside2_path:
+        exe_path = os.path.join(pyside2_path, "shiboken2" + (".exe" if sys.platform == "win32" else ""))
+        if os.path.exists(exe_path):
+            return pyside2_path
+
+    return None
 
 
 def find_package(which_package):
@@ -288,6 +312,16 @@ def find_package(which_package):
 
 
 def find_package_path(dir_name):
+    # First check PYTHONPATH environment variable (for Houdini support)
+    pythonpath = os.environ.get("PYTHONPATH", "")
+    if pythonpath:
+        for p in pythonpath.split(os.pathsep):
+            if p:
+                package = os.path.join(p, dir_name)
+                if os.path.exists(package):
+                    return clean_path(os.path.realpath(package))
+
+    # Then check sys.path entries containing "site-"
     for p in sys.path:
         if "site-" in p:
             package = os.path.join(p, dir_name)
@@ -302,7 +336,8 @@ def python_version():
 
 
 def get_python_include_path():
-    return sysconfig.get_python_inc()
+    # Use modern sysconfig (Python 3.2+) instead of deprecated distutils.sysconfig
+    return sysconfig.get_path('include')
 
 
 def python_link_flags_qmake():
@@ -333,9 +368,16 @@ def python_link_flags_cmake():
 
 def python_link_data():
     # @TODO Fix to work with static builds of Python
+    # Use modern sysconfig (Python 3.2+) instead of deprecated distutils.sysconfig
     libdir = sysconfig.get_config_var("LIBDIR")
     if libdir is None:
-        libdir = os.path.abspath(os.path.join(sysconfig.get_config_var("LIBDEST"), "..", "libs"))
+        # Fallback for Windows where LIBDIR may not be set
+        stdlib = sysconfig.get_path("stdlib")
+        if stdlib:
+            libdir = os.path.abspath(os.path.join(stdlib, "..", "libs"))
+        else:
+            # Last resort: derive from sys.executable
+            libdir = os.path.abspath(os.path.join(os.path.dirname(sys.executable), "libs"))
     version = python_version()
     version_no_dots = version.replace(".", "")
 

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\bin\\\\*hboost_python*\")",
+      "Bash(dir \"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\custom\\\\houdini\\\\dsolib\\\\*hboost_python*\")",
+      "Bash(powershell -command \"Get-ChildItem ''C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487'' -Recurse -Filter ''*tbb*.lib'' 2>$null | Select-Object -ExpandProperty FullName\")",
+      "Bash(C:/VFX/vcpkg/vcpkg.exe search:*)",
+      "Bash(\"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\python.exe\" cmake/macros/pyside2_config.py --pyside2-include-path)",
+      "Bash(set \"PYTHONPATH=C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\lib\\\\site-packages;C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\lib\\\\site-packages-forced\")",
+      "Bash(dir \"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\lib\")",
+      "Bash(dir:*)",
+      "Bash(cmake:*)",
+      "Bash(if exist CMakeCache.txt del /F CMakeCache.txt)",
+      "Bash(if exist CMakeFiles rmdir /S /Q CMakeFiles)",
+      "Bash(if exist _deps rmdir /S /Q _deps)",
+      "Bash(powershell -Command:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\VC\\\\Tools\\\\MSVC\\\\14.44.35207\\\\bin\\\\HostX64\\\\x64\\\\CL.exe\" /P /IC:GitHubOpenDCCsrclib /IC:GitHubOpenDCCbuild_houdiniinclude /I\"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\include\" /I\"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\toolkit\\\\include\" /D WIN32 /D _WINDOWS /D NDEBUG /D OPENDCC_COMPOSITING_EXPORT /D NOMINMAX /D WIN32_LEAN_AND_MEAN /D __TBB_NO_IMPLICIT_LINKAGE /D TBB_USE_CAPTURED_EXCEPTION /D BOOST_ALL_DYN_LINK /D HAVE_SNPRINTF /D TBB_SUPPRESS_DEPRECATED_MESSAGES /D BOOST_BIND_GLOBAL_PLACEHOLDERS /D OPENDCC_HOUDINI_SUPPORT /D HBOOST_ALL_DYN_LINK /D HBOOST_ALL_NO_LIB /D OPENEXR_DLL /D PXR_PYTHON_ENABLED=1 /Zc:preprocessor /std:c++17 compositor.cpp)",
+      "Bash(\"C:\\\\Program Files\\\\Side Effects Software\\\\Houdini 20.5.487\\\\python311\\\\python.exe\" -c \"import sys; print\\(''\\\\n''.join\\(sys.path\\)\\)\")",
+      "Bash(tr:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" /symbols \"C:/Program Files/Side Effects Software/Houdini 20.5.487/custom/houdini/dsolib/OpenImageIO_sidefx.lib\")",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" /symbols OpenImageIO_sidefx.lib)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" //exports \"C:/Program Files/Side Effects Software/Houdini 20.5.487/bin/OpenImageIO_sidefx.dll\")",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\":*)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" //exports \"C:/Program Files/Side Effects Software/Houdini 20.5.487/bin/Imath_sidefx.dll\")",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" //symbols Imath_sidefx.lib)",
+      "Bash(\"C:/Program Files \\(x86\\)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/dumpbin.exe\" //all Imath_sidefx.lib)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"c:\\\\GitHub\\\\OpenDCC\\\\build_scripts\\\\check_deps.ps1\")"
+    ]
+  }
+}

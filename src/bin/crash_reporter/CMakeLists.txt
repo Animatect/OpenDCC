@@ -14,9 +14,6 @@ target_link_libraries(
     utils
     app_config
     sentry::sentry
-    sentry_crashpad::client
-    sentry_crashpad::client
-    sentry_crashpad::handler
     Qt5::Widgets
     Qt5::Core
     Qt5::Gui)

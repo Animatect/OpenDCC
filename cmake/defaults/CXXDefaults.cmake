@@ -29,7 +29,10 @@ if(MSVC)
     if(MSVC_VERSION GREATER_EQUAL 1920)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline- /bigobj")
         # Since v143 toolset use new MSVC more standard-conforming preprocessor
-        if(MSVC_VERSION GREATER_EQUAL 1930)
+        # However, for Houdini builds, the /Zc:preprocessor flag causes issues with
+        # USD's TF_DECLARE_PUBLIC_TOKENS macros (used in hgi/tokens.h, vt/types.h, etc.)
+        # The macros like _TF_PP_IFF_, TF_PP_CAT don't work correctly with conformant preprocessor.
+        if(MSVC_VERSION GREATER_EQUAL 1930 AND NOT DCC_HOUDINI_SUPPORT)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor")
         endif()
     else()

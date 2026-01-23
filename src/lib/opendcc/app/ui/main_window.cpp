@@ -379,7 +379,8 @@ void MainWindow::close_panels()
     }
     for (auto widget : m_main_container_widget->floatingWidgets())
     {
-        widget->hideAndDeleteLater();
+        widget->hide();
+        widget->deleteLater();
     }
 }
 
@@ -403,7 +404,8 @@ void MainWindow::load_layout(const std::string& path)
     }
     for (auto widget : m_main_container_widget->floatingWidgets())
     {
-        widget->hideAndDeleteLater();
+        widget->hide();
+        widget->deleteLater();
     }
 
     qApp->processEvents(); // forces the ui to update, because reasons

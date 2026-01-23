@@ -7,7 +7,7 @@ set(ZMQ_ROOT
 if(WIN32)
     find_library(
         ZMQ_LIBRARY
-        NAMES libzmq
+        NAMES libzmq libzmq-mt-4_3_5 libzmq-mt-4_3_4 libzmq-mt zmq
         PATHS ${ZMQ_ROOT}/lib $ENV{ZMQ_ROOT}/lib
         DOC "ZeroMQ library")
 else()

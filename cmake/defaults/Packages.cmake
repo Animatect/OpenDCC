@@ -1,8 +1,7 @@
 include(ExternalProject)
 
-if(CMAKE_COMPILER_IS_GNUCC)
-    find_package(Threads)
-endif()
+# Find Threads on all platforms
+find_package(Threads REQUIRED)
 
 find_package(USD REQUIRED)
 if(DCC_USE_PTEX)
@@ -113,28 +112,31 @@ find_package(
     COMPONENTS ${BOOST_COMPONENTS}
     REQUIRED)
 
-if(${boost_version_string} VERSION_GREATER_EQUAL "1.67")
-    set(python_version_nodot "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
-    find_package(
-        Boost
-        COMPONENTS python${python_version_nodot}
-        REQUIRED)
-    set(Boost_PYTHON_LIBRARY "${Boost_PYTHON${python_version_nodot}_LIBRARY}")
-    find_package(
-        Boost
-        COMPONENTS python
-        REQUIRED)
-else()
-    find_package(
-        Boost
-        COMPONENTS python
-        REQUIRED)
-endif()
-if(Python3_FOUND)
-    find_package(
-        Boost
-        COMPONENTS python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
-        REQUIRED)
+# Skip Boost.Python search when using Houdini - hboost_python is provided via FindHoudiniUSD
+if(NOT DCC_HOUDINI_SUPPORT)
+    if(${boost_version_string} VERSION_GREATER_EQUAL "1.67")
+        set(python_version_nodot "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+        find_package(
+            Boost
+            COMPONENTS python${python_version_nodot}
+            REQUIRED)
+        set(Boost_PYTHON_LIBRARY "${Boost_PYTHON${python_version_nodot}_LIBRARY}")
+        find_package(
+            Boost
+            COMPONENTS python
+            REQUIRED)
+    else()
+        find_package(
+            Boost
+            COMPONENTS python
+            REQUIRED)
+    endif()
+    if(Python3_FOUND)
+        find_package(
+            Boost
+            COMPONENTS python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
+            REQUIRED)
+    endif()
 endif()
 
 if(DCC_HOUDINI_SUPPORT)
@@ -164,6 +166,12 @@ if(DCC_HOUDINI_SUPPORT)
                             "${PROJECT_BINARY_DIR}/include/boost")
     add_definitions(-DOPENDCC_HOUDINI_SUPPORT -DHBOOST_ALL_DYN_LINK -DHBOOST_ALL_NO_LIB)
     add_library(_houdini_compatibility INTERFACE)
+    # Add USD and Houdini include directories so precompiled headers can find pxr headers
+    # Use BUILD_INTERFACE for paths that only apply during build (not exported/installed)
+    target_include_directories(_houdini_compatibility INTERFACE
+        "${USD_INCLUDE_DIR}"
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    )
     target_precompile_headers(_houdini_compatibility INTERFACE "${CMAKE_CURRENT_LIST_DIR}/houdini_compatibility_pch.h")
     export(TARGETS _houdini_compatibility FILE _houdini_compatibility-targets.cmake)
     install(TARGETS _houdini_compatibility EXPORT _houdini_compatibility-targets)
@@ -173,6 +181,10 @@ if(DCC_HOUDINI_SUPPORT)
         NAMESPACE opendcc::)
     link_libraries(_houdini_compatibility)
 
+    # Ensure USD include directory is available globally for all targets
+    # This is needed because Houdini's USD headers use TF macros that require
+    # the preprocessorUtilsLite.h header to be found
+    include_directories("${USD_INCLUDE_DIR}")
 endif()
 set(BUILD_SHARED_LIBS OFF)
 
@@ -226,7 +238,14 @@ if(MSVC)
     add_definitions(-DOPENEXR_DLL)
 endif()
 
-find_package(OSL REQUIRED)
+# OSL is only required for Cycles support - skip for Houdini builds without Cycles
+if(NOT DCC_HOUDINI_SUPPORT OR DCC_BUILD_CYCLES_SUPPORT OR DCC_USD_FALLBACK_PROXY_BUILD_CYCLES)
+    find_package(OSL REQUIRED)
+else()
+    message(STATUS "Skipping OSL (not required for Houdini build without Cycles)")
+    set(OSL_FOUND FALSE)
+endif()
+
 find_package(OpenSubdiv REQUIRED)
 
 

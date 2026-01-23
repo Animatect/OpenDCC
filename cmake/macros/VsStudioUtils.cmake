@@ -63,8 +63,8 @@ if(DCC_MAKE_VSDEBUG_LAUNCHER
     endif()
     if(DEFINED OSL_ROOT)
         list(APPEND ENV_PATH ${OSL_ROOT}/bin)
-    else()
-        message(FATAL_ERROR "OSL_ROOT is not defined")
+    elseif(OSL_FOUND)
+        message(FATAL_ERROR "OSL_ROOT is not defined but OSL_FOUND is true")
     endif()
 
     if(DCC_BUILD_ARNOLD_SUPPORT)

@@ -14,13 +14,26 @@ list(APPEND _USD_DEPS_ENV "${Boost_LIBRARY_DIR_RELEASE}")
 list(APPEND _USD_DEPS_ENV "${TBB_INCLUDE_DIRS}/../lib")
 list(APPEND _USD_DEPS_ENV "${USD_GENSCHEMA_DIR}")
 
-if(WIN32)
-    list(APPEND _USD_DEPS_ENV "$ENV{PATH}")
-    string(JOIN ";" USD_DEPS_ENV ${_USD_DEPS_ENV})
+# For Houdini builds, don't append system PATH as it may contain incompatible USD libraries
+if(DCC_HOUDINI_SUPPORT AND DEFINED HOUDINI_ROOT)
+    list(APPEND _USD_DEPS_ENV "${HOUDINI_ROOT}/bin")
+    list(APPEND _USD_DEPS_ENV "${HOUDINI_ROOT}/custom/houdini/dsolib")
+    list(APPEND _USD_DEPS_ENV "${HOUDINI_ROOT}/dsolib")
+    if(WIN32)
+        list(APPEND _USD_DEPS_ENV "$ENV{SystemRoot}/System32")
+        string(JOIN ";" USD_DEPS_ENV ${_USD_DEPS_ENV})
+    else()
+        string(JOIN ":" USD_DEPS_ENV ${_USD_DEPS_ENV})
+    endif()
 else()
-    list(APPEND _USD_DEPS_ENV "$ENV{LD_LIBRARY_PATH}")
-    list(APPEND _USD_DEPS_ENV "$ENV{PATH}")
-    string(JOIN ":" USD_DEPS_ENV ${_USD_DEPS_ENV})
+    if(WIN32)
+        list(APPEND _USD_DEPS_ENV "$ENV{PATH}")
+        string(JOIN ";" USD_DEPS_ENV ${_USD_DEPS_ENV})
+    else()
+        list(APPEND _USD_DEPS_ENV "$ENV{LD_LIBRARY_PATH}")
+        list(APPEND _USD_DEPS_ENV "$ENV{PATH}")
+        string(JOIN ":" USD_DEPS_ENV ${_USD_DEPS_ENV})
+    endif()
 endif()
 
 if(WIN32)
@@ -29,6 +42,15 @@ elseif(APPLE)
     set(OS_ENV_SEPARATOR ":")
 else()
     set(OS_ENV_SEPARATOR ":")
+endif()
+
+# Use USD_PYTHON_DIR if set (Houdini), otherwise fall back to USD_LIBRARY_DIR/python
+if(DEFINED USD_PYTHON_DIR AND EXISTS "${USD_PYTHON_DIR}")
+    set(_usd_python_path "${USD_PYTHON_DIR}")
+    set(_usd_pythonpath_env "PYTHONPATH=${_usd_python_path}")
+else()
+    set(_usd_python_path "${USD_LIBRARY_DIR}/python")
+    set(_usd_pythonpath_env "PYTHONPATH=\"${_usd_python_path}\"${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}")
 endif()
 
 set(GEN_HEADERS ${OUTPUT_DIR}/api.h ${OUTPUT_DIR}/renderSessionAPI.h ${OUTPUT_DIR}/tokens.h)
@@ -58,7 +80,7 @@ add_custom_command(
            ${GEN_SRC} ${GEN_SRC_PY}
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/schema.usda"
     COMMAND
-        ${CMAKE_COMMAND} -E env "PYTHONPATH=\"${USD_LIBRARY_DIR}/python\"${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}"
+        ${CMAKE_COMMAND} -E env "${_usd_pythonpath_env}"
         "LD_LIBRARY_PATH=${USD_DEPS_ENV}${OS_ENV_SEPARATOR}" "PATH=${USD_DEPS_ENV}${OS_ENV_SEPARATOR}"
         "PXR_PLUGINPATH_NAME=$<TARGET_FILE_DIR:hydra_render_session_api>" ${USD_GENSCHEMA} "${SCHEMA_FILE}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${OUTPUT_DIR}/plugInfo.json ${OUTPUT_DIR}/plugInfo.json.in

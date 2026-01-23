@@ -3,3 +3,4 @@ install_dir
 .venv
 *.pyc
 ccache
+/build_houdini

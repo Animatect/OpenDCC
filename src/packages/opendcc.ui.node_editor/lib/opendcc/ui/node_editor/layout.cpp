@@ -98,7 +98,7 @@ bool layout_items(const QVector<NodeItem*>& items, bool vertical)
 
     GVC_t* gvc = gvContext();
     char* dummy_dot;
-    uint32_t dummy_length;
+    size_t dummy_length;
 
     gvLayout(gvc, graph, "dot");
     auto res = gvRenderData(gvc, graph, "dot", &dummy_dot, &dummy_length);

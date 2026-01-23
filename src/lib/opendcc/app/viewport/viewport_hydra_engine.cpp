@@ -2,6 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <pxr/pxr.h>
+
+// Houdini's USD 24.03 uses the newer HdxFullscreenShader API that was
+// introduced in standard USD 24.05. Define a macro to use the new API
+// for both Houdini builds and USD 24.05+.
+#if defined(OPENDCC_HOUDINI_SUPPORT) || PXR_VERSION >= 2405
+#define HDX_USE_NEW_FULLSCREEN_SHADER_API 1
+#endif
 #if PXR_VERSION >= 2005
 #include <pxr/imaging/hgiInterop/hgiInterop.h>
 #include <pxr/imaging/hdx/hgiConversions.h>
@@ -407,7 +414,10 @@ void ViewportHydraEngine::init_depth_compositor()
     HgiShaderFunctionAddConstantParam(&frag_descr, "stage_meters_per_unit", "float");
     HgiShaderFunctionAddStageOutput(&frag_descr, "depthOut", "float", "depth(any)");
 
-#if PXR_VERSION < 2405
+#if defined(HDX_USE_NEW_FULLSCREEN_SHADER_API)
+    HgiShaderFunctionAddTexture(&frag_descr, "depthIn", 0, 2, HgiFormatFloat32);
+    m_depth_compositor->SetProgram(get_depth_compositor_shader(), depth_technique, frag_descr);
+#else
     HgiShaderFunctionAddTexture(&frag_descr, "depthIn", 2, HgiFormatFloat32);
 
     HgiShaderFunctionDesc vert_descr;
@@ -419,9 +429,6 @@ void ViewportHydraEngine::init_depth_compositor()
     HgiShaderFunctionAddStageOutput(&vert_descr, "uvOut", "vec2");
 
     m_depth_compositor->SetProgram(get_depth_compositor_shader(), depth_technique, frag_descr, vert_descr);
-#else
-    HgiShaderFunctionAddTexture(&frag_descr, "depthIn", 0, 2, HgiFormatFloat32);
-    m_depth_compositor->SetProgram(get_depth_compositor_shader(), depth_technique, frag_descr);
 #endif
 }
 
@@ -575,10 +582,10 @@ void ViewportHydraEngine::compose_aovs()
             uniform.stage_meters_per_unit = m_render_index->GetRenderDelegate()->GetRenderSetting(TfToken("stageMetersPerUnit"), 0.01);
 
             m_depth_compositor->SetShaderConstants(sizeof(Uniform), &uniform);
-#if PXR_VERSION < 2405
-            m_depth_compositor->BindTextures({ HdAovTokens->depth }, { intermediate_depth_handle });
-#else
+#if defined(HDX_USE_NEW_FULLSCREEN_SHADER_API)
             m_depth_compositor->BindTextures({ intermediate_depth_handle });
+#else
+            m_depth_compositor->BindTextures({ HdAovTokens->depth }, { intermediate_depth_handle });
 #endif
             m_depth_compositor->Draw(m_depth_texture, HgiTextureHandle());
             depth_handle = m_depth_texture;

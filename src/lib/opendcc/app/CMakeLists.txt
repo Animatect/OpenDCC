@@ -285,8 +285,8 @@ endif()
 
 target_include_directories(
     opendcc_lib
-    PRIVATE "${PROJECT_SOURCE_DIR}/src/lib/"
-            "${PROJECT_SOURCE_DIR}/src/lib/usd"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/lib/
+            ${PROJECT_SOURCE_DIR}/src/lib/usd
             ${TBB_INCLUDE_DIRS}
             ${Boost_INCLUDE_DIRS}
             ${PYTHON_INCLUDE_DIRS}
@@ -298,12 +298,12 @@ target_compile_definitions(opendcc_lib PRIVATE -DOPENDCC_EXPORT -DBOOST_ALL_DYN_
                                                $<$<BOOL:${DCC_USE_HYDRA_FRAMING_API}>:OPENDCC_USE_HYDRA_FRAMING_API>)
 
 get_target_property(PySide2_INCLUDE_DIR PySide2::pyside2 INTERFACE_INCLUDE_DIRECTORIES)
-include_directories(${PySide2_INCLUDE_DIR}/QtCore/)
-include_directories(${PySide2_INCLUDE_DIR}/QtGui/)
-include_directories(${PySide2_INCLUDE_DIR}/QtWidgets/)
-include_directories(${PySide2_INCLUDE_DIR})
-include_directories(${python_include_dir})
-include_directories(${shiboken_include_dir})
+include_directories("${PySide2_INCLUDE_DIR}/QtCore/")
+include_directories("${PySide2_INCLUDE_DIR}/QtGui/")
+include_directories("${PySide2_INCLUDE_DIR}/QtWidgets/")
+include_directories("${PySide2_INCLUDE_DIR}")
+include_directories("${python_include_dir}")
+include_directories("${shiboken_include_dir}")
 
 if(USD_VERSION VERSION_GREATER_EQUAL 0.22.05)
     target_link_libraries(opendcc_lib compositing)
@@ -386,8 +386,16 @@ target_link_libraries(
     jsoncpp
     opendcc.usd_editor.scene_indices)
 
-target_include_directories(opendcc_lib PUBLIC ${OCIO_INCLUDE_DIRS} ${OIIO_INCLUDE_DIR} ${ILMBASE_INCLUDE_DIR}
-                                              ${ILMBASE_INCLUDE_DIR}/OpenEXR ${ILMBASE_INCLUDE_DIR}/Imath)
+# Add include directories conditionally to handle paths with spaces and empty variables
+if(OCIO_INCLUDE_DIRS)
+    target_include_directories(opendcc_lib PUBLIC "${OCIO_INCLUDE_DIRS}")
+endif()
+if(OIIO_INCLUDE_DIR)
+    target_include_directories(opendcc_lib PUBLIC "${OIIO_INCLUDE_DIR}")
+endif()
+if(ILMBASE_INCLUDE_DIR)
+    target_include_directories(opendcc_lib PUBLIC "${ILMBASE_INCLUDE_DIR}" "${ILMBASE_INCLUDE_DIR}/OpenEXR" "${ILMBASE_INCLUDE_DIR}/Imath")
+endif()
 
 if(WIN32)
 

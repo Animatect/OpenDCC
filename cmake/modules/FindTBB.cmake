@@ -85,6 +85,11 @@ if(NOT TBB_FOUND)
     # Define search paths based on user input and environment variables
     set(TBB_SEARCH_DIR ${TBB_ROOT_DIR} $ENV{TBB_INSTALL_DIR} $ENV{TBBROOT})
 
+    # Support Houdini's bundled TBB - prioritize it for Houdini builds
+    if(DEFINED HOUDINI_ROOT AND DCC_HOUDINI_SUPPORT)
+        list(INSERT TBB_SEARCH_DIR 0 "${HOUDINI_ROOT}/toolkit" "${HOUDINI_ROOT}")
+    endif()
+
     # Define the search directories based on the current platform
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(TBB_DEFAULT_SEARCH_DIR "C:/Program Files/Intel/TBB" "C:/Program Files (x86)/Intel/TBB")

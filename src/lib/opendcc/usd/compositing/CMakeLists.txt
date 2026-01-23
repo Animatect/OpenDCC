@@ -18,3 +18,16 @@ opendcc_make_library(
     usdImagingGL
     usdImaging
     tf)
+
+# MSVC's conformant preprocessor (/Zc:preprocessor) has issues with USD's
+# TF_DECLARE_PUBLIC_TOKENS macros used in hgi/tokens.h. Disable for this target.
+if(MSVC AND DCC_HOUDINI_SUPPORT)
+    set_target_properties(compositing PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
+    # Remove /Zc:preprocessor and use traditional preprocessor for this target
+    get_target_property(_compile_options compositing COMPILE_OPTIONS)
+    if(_compile_options)
+        list(REMOVE_ITEM _compile_options "/Zc:preprocessor")
+        set_target_properties(compositing PROPERTIES COMPILE_OPTIONS "${_compile_options}")
+    endif()
+    target_compile_options(compositing PRIVATE /Zc:preprocessor-)
+endif()

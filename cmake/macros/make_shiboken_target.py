@@ -30,7 +30,10 @@ debug-level = full
 
 header-file = @HEADER_FILE_PATH@
 typesystem-file = @TYPESYSTEM_FILE_PATH@
-language-level = c++@CMAKE_CXX_STANDARD@
+language-level = c++14
+compiler-flag = -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+compiler-flag = -D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS
+compiler-flag = -fdelayed-template-parsing
 {include_paths}
 typesystem-path = @PYSIDE_TYPESYSTEMS@
 {typesystem_paths}

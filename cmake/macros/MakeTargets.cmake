@@ -13,11 +13,29 @@ function(get_usd_env EXTRA_ENVIRONMENT USD_ENVIRONMENT_VAR)
     list(APPEND _result "${TBB_INCLUDE_DIRS}/../lib")
     list(APPEND _result "${USD_GENSCHEMA_DIR}")
     list(APPEND _result "${EXTRA_ENVIRONMENT}") # ????
-    if(WIN32)
-        list(APPEND _result "$ENV{PATH}")
+
+    message(STATUS "[get_usd_env] DCC_HOUDINI_SUPPORT='${DCC_HOUDINI_SUPPORT}' HOUDINI_ROOT='${HOUDINI_ROOT}'")
+
+    # For Houdini builds, don't append system PATH as it may contain
+    # incompatible USD libraries that would be loaded instead of Houdini's
+    if(DCC_HOUDINI_SUPPORT AND DEFINED HOUDINI_ROOT)
+        # Add Houdini's bin and dsolib directories for DLL loading
+        list(APPEND _result "${HOUDINI_ROOT}/bin")
+        list(APPEND _result "${HOUDINI_ROOT}/custom/houdini/dsolib")
+        list(APPEND _result "${HOUDINI_ROOT}/dsolib")
+        # Only append minimal system paths needed for basic tools
+        if(WIN32)
+            list(APPEND _result "$ENV{SystemRoot}/System32")
+        endif()
+        message(STATUS "[get_usd_env] Using Houdini-specific paths (not appending system PATH)")
     else()
-        list(APPEND _result "$ENV{LD_LIBRARY_PATH}")
-        list(APPEND _result "$ENV{PATH}")
+        if(WIN32)
+            list(APPEND _result "$ENV{PATH}")
+        else()
+            list(APPEND _result "$ENV{LD_LIBRARY_PATH}")
+            list(APPEND _result "$ENV{PATH}")
+        endif()
+        message(STATUS "[get_usd_env] Using system PATH")
     endif()
     string(JOIN "${OS_ENV_SEPARATOR}" _fixed_paths ${_result})
 
@@ -37,9 +55,22 @@ function(
     SCHEMA_NAME
     SCHEMA_PREFIX
     HAVE_CLASSES)
+    # Use USD_PYTHON_DIR if set (Houdini), otherwise fall back to USD_LIBRARY_DIR/python
+    # For Houdini builds, don't append system PYTHONPATH as it may contain incompatible USD versions
+    message(STATUS "[parse_schema_file] USD_PYTHON_DIR='${USD_PYTHON_DIR}' USD_LIBRARY_DIR='${USD_LIBRARY_DIR}'")
+    if(DEFINED USD_PYTHON_DIR AND EXISTS "${USD_PYTHON_DIR}")
+        set(_usd_python_path "${USD_PYTHON_DIR}")
+        set(_usd_pythonpath_env "PYTHONPATH=${_usd_python_path}")
+        message(STATUS "[parse_schema_file] Using USD_PYTHON_DIR: ${_usd_python_path}")
+    else()
+        set(_usd_python_path "${USD_LIBRARY_DIR}/python")
+        set(_usd_pythonpath_env "PYTHONPATH=${_usd_python_path}${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}")
+        message(STATUS "[parse_schema_file] Using USD_LIBRARY_DIR fallback: ${_usd_python_path}")
+    endif()
+
     execute_process(
         COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${USD_LIBRARY_DIR}/python${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}"
+            ${CMAKE_COMMAND} -E env "${_usd_pythonpath_env}"
             "LD_LIBRARY_PATH=${USD_ENV}${OS_ENV_SEPARATOR}" "PATH=${USD_ENV}${OS_ENV_SEPARATOR}" "${PYTHON_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/cmake/macros/parse_usd_schema.py" "${USD_GENSCHEMA_SCRIPT}" "${SCHEMA_FILE}"
             "${OUTPUT_DIR}"
@@ -326,6 +357,26 @@ function(opendcc_make_usd_schema TARGET_NAME)
 
     cmake_parse_arguments(args "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
+    # Debug: Check what USD_PYTHON_DIR is set to
+    message(STATUS "[opendcc_make_usd_schema] USD_PYTHON_DIR='${USD_PYTHON_DIR}' DCC_HOUDINI_SUPPORT='${DCC_HOUDINI_SUPPORT}'")
+
+    # Use USD_PYTHON_DIR if set (Houdini), otherwise fall back to USD_LIBRARY_DIR/python
+    # For Houdini builds, don't append system PYTHONPATH as it may contain incompatible USD versions
+    if(DEFINED USD_PYTHON_DIR AND EXISTS "${USD_PYTHON_DIR}")
+        set(_usd_python_path "${USD_PYTHON_DIR}")
+        set(_usd_pythonpath_env "PYTHONPATH=${_usd_python_path}")
+        # Prevent Python from loading user site-packages which may contain incompatible USD
+        set(_usd_python_extra_env "PYTHONNOUSERSITE=1" "PYTHONDONTWRITEBYTECODE=1")
+        message(STATUS "[opendcc_make_usd_schema] Using USD_PYTHON_DIR: ${_usd_python_path}")
+        message(STATUS "[opendcc_make_usd_schema] _usd_pythonpath_env: ${_usd_pythonpath_env}")
+    else()
+        set(_usd_python_path "${USD_LIBRARY_DIR}/python")
+        set(_usd_pythonpath_env "PYTHONPATH=${_usd_python_path}${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}")
+        set(_usd_python_extra_env "")
+        message(STATUS "[opendcc_make_usd_schema] Using USD_LIBRARY_DIR fallback: ${_usd_python_path}")
+        message(STATUS "[opendcc_make_usd_schema] _usd_pythonpath_env: ${_usd_pythonpath_env}")
+    endif()
+
     if(NOT args_SCHEMA_FILE)
         set(args_SCHEMA_FILE "schema.usda")
     endif()
@@ -411,6 +462,9 @@ function(opendcc_make_usd_schema TARGET_NAME)
     set(PLUG_INFO_LIBRARY_PATH
         "${LIBRARY_LOCATION}/${CMAKE_SHARED_LIBRARY_PREFIX}${TARGET_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
+    # Debug: print what we're about to use in add_custom_command
+    message(STATUS "[add_custom_command] TARGET=${TARGET_NAME} _usd_pythonpath_env='${_usd_pythonpath_env}'")
+
     add_custom_command(
         OUTPUT "${_output_dir}/plugInfo.json" "${_output_dir}/generatedSchema.usda"
                "${CMAKE_CURRENT_BINARY_DIR}/${_schema_install_dir}/${_schema_name}/resources/plugInfo.json"
@@ -418,16 +472,16 @@ function(opendcc_make_usd_schema TARGET_NAME)
         DEPENDS ${_schema_file} "${_after_gen_script_path}" ${args_SCHEMA_DEPENDENCIES}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${_output_dir}"
         COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${USD_LIBRARY_DIR}/python${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}"
+            ${CMAKE_COMMAND} -E env "${_usd_pythonpath_env}" ${_usd_python_extra_env}
             "LD_LIBRARY_PATH=${_usd_env}${OS_ENV_SEPARATOR}" "PATH=${_usd_env}${OS_ENV_SEPARATOR}"
             "${_pxr_path_name}=${_pxr_deps}" ${_run_pre_gen_script}
         COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${USD_LIBRARY_DIR}/python${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}"
+            ${CMAKE_COMMAND} -E env "${_usd_pythonpath_env}" ${_usd_python_extra_env}
             "LD_LIBRARY_PATH=${_usd_env}${OS_ENV_SEPARATOR}" "PATH=${_usd_env}${OS_ENV_SEPARATOR}"
             "${_pxr_path_name}=${_pxr_deps}" ${USD_GENSCHEMA} "${_schema_file}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_output_dir}/plugInfo.json ${_output_dir}/plugInfo.json.in
         COMMAND
-            ${CMAKE_COMMAND} -E env "PYTHONPATH=${USD_LIBRARY_DIR}/python${OS_ENV_SEPARATOR}$ENV{PYTHONPATH}"
+            ${CMAKE_COMMAND} -E env "${_usd_pythonpath_env}" ${_usd_python_extra_env}
             "LD_LIBRARY_PATH=${_usd_env}${OS_ENV_SEPARATOR}" "PATH=${_usd_env}${OS_ENV_SEPARATOR}"
             "${_pxr_path_name}=${_pxr_deps}" ${_run_after_gen_script}
         COMMAND

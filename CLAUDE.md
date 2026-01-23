@@ -20,6 +20,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OpenDCC uses CMake (minimum version 3.18) with extensive modularization.
 
+**Windows Build Options:**
+1. **Build with Houdini** (Recommended - fastest): Use `build_scripts/build_opendcc_houdini.bat`
+2. **Build USD from source**: Use `build_scripts/build_usd_for_opendcc.bat` first
+3. See [WINDOWS_BUILD_GUIDE.md](WINDOWS_BUILD_GUIDE.md) for detailed instructions
+
 ```bash
 # Standard CMake build
 mkdir build
@@ -33,6 +38,9 @@ cmake --build . --config Release
 
 # With specific options
 cmake -DDCC_BUILD_TESTS=ON -DDCC_BUILD_ARNOLD_SUPPORT=OFF ..
+
+# Windows with Houdini USD (fastest approach)
+cmake -G "Visual Studio 17 2022" -DDCC_HOUDINI_SUPPORT=ON -DHOUDINI_ROOT="C:\Program Files\Side Effects Software\Houdini 20.5.xxx" ..
 ```
 
 ### Important Build Options

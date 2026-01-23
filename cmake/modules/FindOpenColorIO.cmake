@@ -19,39 +19,70 @@
 # License.
 #
 
-if(UNIX)
-    find_path(OCIO_BASE_DIR include/OpenColorIO/OpenColorABI.h HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}"
-                                                                     "/opt/ocio")
-    find_path(
-        OCIO_LIBRARY_DIR libOpenColorIO.so
-        HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}"
-        PATH_SUFFIXES lib/
-        DOC "OpenColorIO library path")
-elseif(WIN32)
-    find_path(OCIO_BASE_DIR include/OpenColorIO/OpenColorABI.h HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}")
+# Support Houdini's bundled OpenColorIO
+# For Houdini builds, prioritize Houdini's libraries to ensure namespace consistency
+if(DEFINED HOUDINI_ROOT AND DCC_HOUDINI_SUPPORT)
+    # Houdini uses sidefx namespace, so we must use Houdini's OpenColorIO_sidefx library
+    set(_ocio_search_paths "${HOUDINI_ROOT}/toolkit/include" "${HOUDINI_ROOT}/toolkit")
+    set(_ocio_lib_paths "${HOUDINI_ROOT}/custom/houdini/dsolib" "${HOUDINI_ROOT}/dsolib")
+
+    find_path(OCIO_BASE_DIR include/OpenColorIO/OpenColorABI.h HINTS ${_ocio_search_paths})
     find_path(
         OCIO_LIBRARY_DIR
-        NAMES OpenColorIO.lib OpenColorIO_2_0.lib
-        HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}"
-        PATH_SUFFIXES lib/
+        NAMES OpenColorIO_sidefx.lib
+        HINTS ${_ocio_lib_paths}
         DOC "OpenColorIO library path")
+
+    find_path(
+        OCIO_INCLUDE_DIR OpenColorIO/OpenColorABI.h
+        HINTS ${_ocio_search_paths}
+        PATH_SUFFIXES include/
+        DOC "OpenColorIO headers path")
+
+    find_library(
+        OCIO_LIBRARY
+        NAMES OpenColorIO_sidefx
+        HINTS ${_ocio_lib_paths}
+        DOC "OCIO's library path")
+else()
+    if(DEFINED HOUDINI_ROOT)
+        list(APPEND _ocio_search_paths "${HOUDINI_ROOT}/toolkit/include" "${HOUDINI_ROOT}/toolkit")
+        list(APPEND _ocio_lib_paths "${HOUDINI_ROOT}/custom/houdini/dsolib" "${HOUDINI_ROOT}/dsolib")
+    endif()
+
+    if(UNIX)
+        find_path(OCIO_BASE_DIR include/OpenColorIO/OpenColorABI.h HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}"
+                                                                         "/opt/ocio" ${_ocio_search_paths})
+        find_path(
+            OCIO_LIBRARY_DIR libOpenColorIO.so
+            HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}" ${_ocio_lib_paths}
+            PATH_SUFFIXES lib/
+            DOC "OpenColorIO library path")
+    elseif(WIN32)
+        find_path(OCIO_BASE_DIR include/OpenColorIO/OpenColorABI.h HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" ${_ocio_search_paths})
+        find_path(
+            OCIO_LIBRARY_DIR
+            NAMES OpenColorIO.lib OpenColorIO_2_0.lib OpenColorIO_sidefx.lib
+            HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}" ${_ocio_lib_paths}
+            PATH_SUFFIXES lib/
+            DOC "OpenColorIO library path")
+    endif()
+
+    find_path(
+        OCIO_INCLUDE_DIR OpenColorIO/OpenColorABI.h
+        HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}" ${_ocio_search_paths}
+        PATH_SUFFIXES include/
+        DOC "OpenColorIO headers path")
+
+    find_library(
+        OCIO_LIBRARY
+        NAMES OpenColorIO OpenColorIO_2_0 OpenColorIO_sidefx
+        HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}" ${_ocio_lib_paths}
+        PATH_SUFFIXES lib/
+        DOC "OCIO's ${OCIO_LIB} library path")
 endif()
 
-find_path(
-    OCIO_INCLUDE_DIR OpenColorIO/OpenColorABI.h
-    HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}"
-    PATH_SUFFIXES include/
-    DOC "OpenColorIO headers path")
-
 list(APPEND OCIO_INCLUDE_DIRS ${OCIO_INCLUDE_DIR})
-
-find_library(
-    OCIO_LIBRARY
-    NAMES OpenColorIO OpenColorIO_2_0
-    HINTS "${OCIO_LOCATION}" "$ENV{OCIO_LOCATION}" "${OCIO_BASE_DIR}"
-    PATH_SUFFIXES lib/
-    DOC "OCIO's ${OCIO_LIB} library path")
-
 list(APPEND OCIO_LIBRARIES ${OCIO_LIBRARY})
 
 if(OCIO_INCLUDE_DIRS AND EXISTS "${OCIO_INCLUDE_DIR}/OpenColorIO/OpenColorABI.h")

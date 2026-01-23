@@ -5,6 +5,10 @@
 
 #pragma once
 
+// Include TF preprocessor utilities first for MSVC conformant preprocessor compatibility.
+// This must be included before any pxr headers that use TF_DECLARE_PUBLIC_TOKENS.
+#include <pxr/base/tf/preprocessorUtilsLite.h>
+
 #include "opendcc/opendcc.h"
 #include "opendcc/usd/compositing/api.h"
 #include "opendcc/usd/compositing/layer.h"
