@@ -191,11 +191,17 @@ set(PYTHON_INCLUDE_DIR "${_houdini_python_include_dir}" CACHE PATH "Python inclu
 set(PYTHON_INCLUDE_DIRS "${_houdini_python_include_dir}" CACHE PATH "Python include directories (Houdini)" FORCE)
 message(STATUS "Set PYTHON_EXECUTABLE to: ${PYTHON_EXECUTABLE}")
 
-# USD library list - updated for Houdini 20.5+ (USD 24.x)
-# Note: Library names vary between USD versions and Houdini builds
+# USD library list - Core libraries (present in all USD versions)
 set(_houdini_pxr_libs
-    ar;arch;cameraUtil;garch;geomUtil;gf;glf;hd;hdGp;hdMtlx;hdsi;hdSt;hdx;hf;hgi;hgiGL;hgiInterop;hio;js;kind;ndr;pcp;plug;pxOsd;sdf;sdr;tf;trace;ts;usd;usdAppUtils;usdBakeMtlx;usdGeom;usdHydra;usdImaging;usdImagingGL;usdLux;usdMedia;usdMtlx;usdPhysics;usdProc;usdProcImaging;usdRender;usdRi;usdRiPxrImaging;usdShade;usdSkel;usdSkelImaging;usdUI;usdUtils;usdviewq;usdVol;usdVolImaging;vt;work;
+    ar;arch;cameraUtil;garch;geomUtil;gf;glf;hd;hdGp;hdSt;hdx;hf;hgi;hgiGL;hgiInterop;hio;js;kind;ndr;pcp;plug;pxOsd;sdf;sdr;tf;trace;usd;usdAppUtils;usdGeom;usdHydra;usdImaging;usdImagingGL;usdLux;usdRender;usdRi;usdShade;usdSkel;usdSkelImaging;usdUI;usdUtils;usdviewq;usdVol;usdVolImaging;vt;work;
 )
+
+# Optional libraries (may not exist in older Houdini/USD versions)
+set(_houdini_pxr_libs_optional
+    ts;hdMtlx;hdsi;usdBakeMtlx;usdMedia;usdMtlx;usdPhysics;usdProc;usdProcImaging;usdRiPxrImaging;
+)
+
+# Find required USD libraries
 foreach(_pxr_lib ${_houdini_pxr_libs})
     find_library(
         ${_pxr_lib}_path
@@ -211,6 +217,31 @@ foreach(_pxr_lib ${_houdini_pxr_libs})
                    INTERFACE_LINK_LIBRARIES _houdini_deps
                    IMPORTED_IMPLIB "${${_pxr_lib}_path}"
                    IMPORTED_LOCATION "${${_pxr_lib}_path}")
+endforeach()
+
+# Find optional USD libraries (don't fail if missing)
+foreach(_pxr_lib ${_houdini_pxr_libs_optional})
+    find_library(
+        ${_pxr_lib}_path
+        NAMES libpxr_${_pxr_lib} pxr_${_pxr_lib}
+        PATHS ${HOUDINI_ROOT}/custom/houdini/dsolib/ ${HOUDINI_ROOT}/dsolib/
+        NO_DEFAULT_PATH)
+
+    if(${_pxr_lib}_path)
+        message(STATUS "Found optional USD library: ${_pxr_lib}")
+        add_library(${_pxr_lib} SHARED IMPORTED)
+        set_target_properties(
+            ${_pxr_lib}
+            PROPERTIES INTERFACE_COMPILE_DEFINITIONS "PXR_PYTHON_ENABLED=1"
+                       INTERFACE_INCLUDE_DIRECTORIES "${USD_INCLUDE_DIR}"
+                       INTERFACE_LINK_LIBRARIES _houdini_deps
+                       IMPORTED_IMPLIB "${${_pxr_lib}_path}"
+                       IMPORTED_LOCATION "${${_pxr_lib}_path}")
+        # Add to the main library list if found
+        list(APPEND _houdini_pxr_libs ${_pxr_lib})
+    else()
+        message(STATUS "Optional USD library not found: ${_pxr_lib} (skipping)")
+    endif()
 endforeach()
 
 foreach(_pxr_lib ${_houdini_pxr_libs})

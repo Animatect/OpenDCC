@@ -436,11 +436,14 @@ void commands::utils::flatten_prim(const PXR_NS::UsdPrim& src_prim, const PXR_NS
 bool commands::utils::copy_spec_without_children(const PXR_NS::SdfLayerHandle& srcLayer, const PXR_NS::SdfPath& srcPath,
                                                  const PXR_NS::SdfLayerHandle& dstLayer, const PXR_NS::SdfPath& dstPath)
 {
-#if PXR_VERSION >= 2405 || defined(OPENDCC_HOUDINI_SUPPORT)
-    // USD 24.05+ uses std::optional, and for Houdini builds we use std::optional
-    // since hboost doesn't include boost::optional header
+#if defined(DCC_HOUDINI_SUPPORT)
+    // Houdini's USD uses hboost::optional (Houdini's custom boost namespace)
+    using Optional = hboost::optional<VtValue>;
+#elif PXR_VERSION >= 2405
+    // USD 24.05+ uses std::optional
     using Optional = std::optional<VtValue>;
 #else
+    // Older USD uses boost::optional
     using Optional = boost::optional<VtValue>;
 #endif
     return SdfCopySpec(

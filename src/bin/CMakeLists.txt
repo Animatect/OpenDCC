@@ -9,4 +9,5 @@ if(DCC_BUILD_RENDER_VIEW)
     endif()
 endif()
 
-add_subdirectory(crash_reporter)
+# Temporarily disabled - requires crashpad library
+# add_subdirectory(crash_reporter)

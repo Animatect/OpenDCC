@@ -3,10 +3,10 @@
 
 #include <pxr/pxr.h>
 
-// Houdini's USD 24.03 uses the newer HdxFullscreenShader API that was
-// introduced in standard USD 24.05. Define a macro to use the new API
-// for both Houdini builds and USD 24.05+.
-#if defined(OPENDCC_HOUDINI_SUPPORT) || PXR_VERSION >= 2405
+// USD 24.05+ uses the newer HdxFullscreenShader API.
+// Houdini 20.x uses USD 23.x which has the OLD API (2 parameters).
+// Only enable new API for USD 24.05+ (not for Houdini 20.x builds).
+#if PXR_VERSION >= 2405
 #define HDX_USE_NEW_FULLSCREEN_SHADER_API 1
 #endif
 #if PXR_VERSION >= 2005

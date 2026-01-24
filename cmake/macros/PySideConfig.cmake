@@ -3,11 +3,32 @@
 
 # For Houdini builds, set PYTHONPATH to include Houdini's site-packages-forced
 # which contains PySide2, shiboken2, and shiboken2_generator
+# Can be overridden by setting DCC_PYSIDE2_PATH and DCC_SHIBOKEN_GENERATOR_PATH
 if(DCC_HOUDINI_SUPPORT AND DEFINED HOUDINI_ROOT)
-    # Houdini stores PySide2/shiboken2 in site-packages-forced
-    set(_pyside_pythonpath "${HOUDINI_ROOT}/python311/lib/site-packages-forced")
-    # Also set the generator directory environment variable
-    set(_shiboken_generator_dir "${HOUDINI_ROOT}/python311/lib/site-packages-forced/shiboken2_generator")
+    # Detect Python version from PYTHON_EXECUTABLE path
+    # Extract pythonXX directory name (e.g., python39, python310, python311)
+    get_filename_component(_python_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
+    get_filename_component(_python_version_dir "${_python_dir}" NAME)
+    message(STATUS "Detected Houdini Python directory: ${_python_version_dir}")
+
+    # Allow override via CMake variables (useful when using separate PySide2 installation)
+    if(DEFINED ENV{DCC_PYSIDE2_PATH})
+        set(_pyside_pythonpath "$ENV{DCC_PYSIDE2_PATH}")
+        message(STATUS "Using custom PySide2 path from DCC_PYSIDE2_PATH: ${_pyside_pythonpath}")
+    else()
+        # Houdini stores PySide2/shiboken2 in site-packages-forced
+        set(_pyside_pythonpath "${HOUDINI_ROOT}/${_python_version_dir}/lib/site-packages-forced")
+        message(STATUS "Using Houdini PySide2 path: ${_pyside_pythonpath}")
+    endif()
+
+    if(DEFINED ENV{DCC_SHIBOKEN_GENERATOR_PATH})
+        set(_shiboken_generator_dir "$ENV{DCC_SHIBOKEN_GENERATOR_PATH}")
+        message(STATUS "Using custom shiboken generator path from DCC_SHIBOKEN_GENERATOR_PATH: ${_shiboken_generator_dir}")
+    else()
+        # Also set the generator directory environment variable
+        set(_shiboken_generator_dir "${HOUDINI_ROOT}/${_python_version_dir}/lib/site-packages-forced/shiboken2_generator")
+        message(STATUS "Using Houdini shiboken generator path: ${_shiboken_generator_dir}")
+    endif()
 endif()
 
 macro(pyside2_config option output_var)
