@@ -61,7 +61,8 @@
       "Bash(\"/c/VFX/OpenDCC_houdini/bin/dcc_base.exe\" --help)",
       "Bash(./rebuild_shiboken.bat)",
       "Bash(./install_sitecustomize.bat)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"dir /B C:\\\\VFX\\\\OpenDCC_houdini\\\\bin\\\\*.dll 2>nul\")"
     ]
   }
 }

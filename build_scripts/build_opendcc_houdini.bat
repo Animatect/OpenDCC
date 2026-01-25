@@ -92,7 +92,9 @@ if not defined VSINSTALLDIR (
     echo and run this script again.
     pause
     exit /b 1
-)
+) 
+
+
 
 REM Check Houdini
 if not defined HOUDINI_ROOT (
